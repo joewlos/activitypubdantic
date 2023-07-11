@@ -20,17 +20,19 @@ class TestActivityPub:
     def test_person(self):
         """
         Test that the Person model can load the example from the spec.
+        Also test that the JSON matches the expected output for verbose true or false.
         """
         with open("json/activitypub/person.json", "r") as f:
-            person_json = json.load(f)
+            input_json = json.load(f)
 
-        # Load the model for a person
-        person_model = ap.get_model(person_json)
-        person_verbose = ap.get_model_json(person_json, verbose=True, indent=0)
-        person_short = ap.get_model_json(person_json, verbose=False, indent=0)
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_verbose = ap.get_model_json(input_json, verbose=True, indent=0)
+        output_short = ap.get_model_json(input_json, verbose=False, indent=0)
+        output_class = ap.get_class(input_json)
 
         # Outputs for comparisons
-        output_verbose = json.dumps(
+        match_verbose = json.dumps(
             {
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "type": "Person",
@@ -66,7 +68,7 @@ class TestActivityPub:
             },
             indent=0,
         )
-        output_short = json.dumps(
+        match_short = json.dumps(
             {
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "type": "Person",
@@ -83,14 +85,62 @@ class TestActivityPub:
             indent=0,
         )
 
-        # Load the class
-        person_class = ap.get_class(person_json)
+        # Assert that the data is the same
+        assert output_model.name == output_class.model.name == input_json["name"]
+        assert output_model.type == input_json["type"] == "Person"
+        assert output_verbose == match_verbose
+        assert output_short == match_short
+
+    def test_note(self):
+        """
+        Test that the Note model can load the example from the spec.
+        """
+        with open("json/activitypub/note.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
 
         # Assert that the data is the same
-        assert person_model.name == person_class.model.name == person_json["name"]
-        assert person_model.type == person_json["type"] == "Person"
-        assert person_verbose == output_verbose
-        assert person_short == output_short
+        assert (
+            output_model.content == output_class.model.content == input_json["content"]
+        )
+        assert output_model.type == input_json["type"] == "Note"
+
+    def test_create(self):
+        """
+        Test that the Create model can load the example from the spec.
+        """
+        with open("json/activitypub/create.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert str(output_data["id"]) == input_json["id"]
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Create"
+        )
+
+    def test_like(self):
+        """
+        Test that the Like model can load the example from the spec.
+        """
+        with open("json/activitypub/like.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert len(output_data["to"]) == len(input_json["to"])
+        assert output_model.type == input_json["type"] == output_data["type"] == "Like"
 
 
 class TestActivityStreams:
@@ -104,17 +154,19 @@ class TestActivityStreams:
     def test_person(self):
         """
         Test that the Person model and class can load the example from the spec.
+        Also test that the JSON matches the expected output for verbose true or false.
         """
         with open("json/activitystreams/person.json", "r") as f:
-            person_json = json.load(f)
+            input_json = json.load(f)
 
-        # Load the model for a person
-        person_model = ap.get_model(person_json)
-        person_verbose = ap.get_model_json(person_json, verbose=True, indent=0)
-        person_short = ap.get_model_json(person_json, verbose=False, indent=0)
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_verbose = ap.get_model_json(input_json, verbose=True, indent=0)
+        output_short = ap.get_model_json(input_json, verbose=False, indent=0)
+        output_class = ap.get_class(input_json)
 
         # Outputs for comparisons
-        output_verbose = json.dumps(
+        match_verbose = json.dumps(
             {
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "type": "Person",
@@ -122,7 +174,7 @@ class TestActivityStreams:
             },
             indent=0,
         )
-        output_short = json.dumps(
+        match_short = json.dumps(
             {
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "type": "Person",
@@ -130,15 +182,12 @@ class TestActivityStreams:
             },
             indent=0,
         )
-
-        # Load the class
-        person_class = ap.get_class(person_json)
 
         # Assert that the data is valid
-        assert person_model.name == person_class.model.name == person_json["name"]
-        assert person_model.type == person_json["type"] == "Person"
-        assert person_verbose == output_verbose
-        assert person_short == output_short
+        assert output_model.name == output_class.model.name == input_json["name"]
+        assert output_model.type == input_json["type"] == "Person"
+        assert output_verbose == match_verbose
+        assert output_short == match_short
 
 
 class TestMastodon:
@@ -156,13 +205,14 @@ class TestMastodon:
         with open("json/mastodon/poll.json", "r") as f:
             poll_json = json.load(f)
 
-        # Load the model for a question
+        # Load the model and class
         poll_model = ap.get_model(poll_json)
         poll_verbose = ap.get_model_json(poll_json, verbose=True, indent=0)
         poll_short = ap.get_model_json(poll_json, verbose=False, indent=0)
+        poll_class = ap.get_class(poll_json)
 
         # Outputs for comparisons
-        output_verbose = json.dumps(
+        match_verbose = json.dumps(
             {
                 "@context": [
                     "https://www.w3.org/ns/activitystreams",
@@ -222,7 +272,7 @@ class TestMastodon:
             },
             indent=0,
         )
-        output_short = json.dumps(
+        match_short = json.dumps(
             {
                 "@context": [
                     "https://www.w3.org/ns/activitystreams",
@@ -277,11 +327,8 @@ class TestMastodon:
             indent=0,
         )
 
-        # Load the class
-        poll_class = ap.get_class(poll_json)
-
         # Assert that the data is valid
         assert poll_model.content == poll_class.model.content == poll_json["content"]
         assert poll_model.type == poll_json["type"] == "Question"
-        assert poll_verbose == output_verbose
-        assert poll_short == output_short
+        assert poll_verbose == match_verbose
+        assert poll_short == match_short

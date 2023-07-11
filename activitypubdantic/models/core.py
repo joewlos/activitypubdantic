@@ -367,7 +367,7 @@ class CoreModel(BaseModel):
     )
 
     # Context
-    context: Union[HttpUrl, List] = _DEFAULT_CONTEXT
+    context: Union[HttpUrl, List, dict] = _DEFAULT_CONTEXT
 
 
 """
@@ -490,6 +490,7 @@ class ObjectModel(CoreModel):
         "in_reply_to",
         "preview",
         "tag",
+        "to",
         "bto",
         "cc",
         "bcc",
