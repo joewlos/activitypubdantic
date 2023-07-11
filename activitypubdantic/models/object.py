@@ -16,8 +16,7 @@ from activitypubdantic.models.core import (
     LinkModel,
     ObjectModel,
     PlaceModel,
-    must_be_list,
-    must_be_links_or_objects,
+    validate_list_links_or_objects,
 )
 
 """
@@ -38,14 +37,10 @@ class RelationshipModel(ObjectModel):
     object: List[Union[LinkModel, ObjectModel]] = None
     relationship: List[ObjectModel] = None
 
-    # Validators for Links and Objects
-    @field_validator("subject", "object", mode="before")
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validators
+    _relationship_list_links_or_objects = field_validator(
+        "subject", "object", mode="before"
+    )(validate_list_links_or_objects)
 
 
 class ArticleModel(ObjectModel):

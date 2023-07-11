@@ -17,10 +17,11 @@ from activitypubdantic.models.core import (
     PlaceModel,
     ObjectModel,
     OrderedCollectionModel,
-    must_be_camel,
-    must_be_collections,
-    must_be_list,
-    must_be_ordered_collections,
+    _must_be_camel,
+    _must_be_collections,
+    _must_be_list,
+    _must_be_ordered_collections,
+    validate_collections,
 )
 
 
@@ -29,13 +30,27 @@ VALIDATORS
 """
 
 
-# Try to determine if a value is an HttpUrl or EndPoints, and then initialize that model
-def must_be_httpurls_or_endpoints(v):
+# Validate HttpUrl or EndPoints
+def validate_httpurls_or_endpoints(v):
     if isinstance(v, str):  # If a string, default to HttpUrl
         return v
     elif isinstance(v, dict):  # If a dictionary, use EndPointsModel
         return EndpointsModel(**v)
     return v
+
+
+# Validate list of Collections
+def validate_list_collections(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_collections(item)
+    return v
+
+
+# Validate ordered Collections
+def validate_ordered_collections(v):
+    return _must_be_ordered_collections(v)
 
 
 """
@@ -50,8 +65,8 @@ class EndpointsModel(BaseModel):
     Documentation: https://www.w3.org/TR/activitypub/#actor-objects
     """
 
-    # Ensure camel case for all alises
-    model_config = ConfigDict(alias_generator=must_be_camel, populate_by_name=True)
+    # Ensure camel case for all aliases
+    model_config = ConfigDict(alias_generator=_must_be_camel, populate_by_name=True)
 
     # Properties
     proxy_url: HttpUrl = None
@@ -86,30 +101,19 @@ class ActorModel(ObjectModel):
     streams: List[ObjectModel] = None
     endpoints: Union[HttpUrl, EndpointsModel] = None
 
-    # Correct to CollectionModel if only a HttpUrl is provided
-    @field_validator("following", "followers", "liked", mode="before")
-    def validate_collections(cls, v):
-        return must_be_collections(v)
-
-    # Correct to list of CollectionModels if only a list of HttpUrls is provided
-    @field_validator("streams", mode="before")
-    def validate_list_of_collections(cls, v):
-        v = must_be_list(v)
-        print(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_collections(item)
-        return v
-
-    # Correct to OrderedCollectionModel if only a HttpUrl is provided
-    @field_validator("inbox", "outbox", mode="before")
-    def validate_ordered_collections(cls, v):
-        return must_be_ordered_collections(v)
-
-    # Correct to HttpUrl or EndpointsModel
-    @field_validator("endpoints", mode="before")
-    def validate_httpurls_or_endpoints(cls, v):
-        return must_be_httpurls_or_endpoints(v)
+    # Validation
+    _actor_collections = field_validator(
+        "following", "followers", "liked", mode="before"
+    )(validate_collections)
+    _actor_list_collections = field_validator("streams", mode="before")(
+        validate_list_collections
+    )
+    _actor_orderedcollections = field_validator("inbox", "outbox", mode="before")(
+        validate_ordered_collections
+    )
+    _actor_httpurls_or_endpoints = field_validator("endpoints", mode="before")(
+        validate_httpurls_or_endpoints
+    )
 
 
 class ApplicationModel(ActorModel):

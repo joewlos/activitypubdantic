@@ -1,0 +1,45 @@
+{
+    "@context": [
+        "https://www.w3.org/ns/activitystreams",
+        {
+            "toot": "http://joinmastodon.org/ns#",
+            "votersCount": "toot:votersCount"
+        },
+        "https://w3id.org/security/v1"
+    ],
+    "id": "https://polls.example.org/users/sally/statuses/1234",
+    "type": "Question",
+    "votersCount": 10,
+    "attributedTo": "https://polls.example.org/users/sally",
+    "closed": "2023-01-01T20:04:45Z",
+    "content": "<p>What is your favorite starter pokemon?</p>",
+    "endTime": "2023-01-01T20:04:45Z",
+    "oneOf": [
+        {
+            "type": "Note",
+            "name": "Charmander",
+            "replies": {
+                "type": "Collection",
+                "totalItems": 5
+            }
+        },
+        {
+            "type": "Note",
+            "name": "Bulbasaur",
+            "replies": {
+                "type": "Collection",
+                "totalItems": 2
+            }
+        },
+        {
+            "type": "Note",
+            "name": "Squirtle",
+            "replies": {
+                "type": "Collection",
+                "totalItems": 3
+            }
+        }
+    ],
+    "published": "2023-01-01T01:00:00Z",
+    "url": "https://polls.example.org/@sally/1234"
+}

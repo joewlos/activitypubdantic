@@ -75,17 +75,17 @@ _core_object_models = [
 
 
 &#34;&#34;&#34;
-VALIDATORS &amp; ALIAS GENERATORS
+VALIDATORS &amp; ALIAS GENERATORS &amp; THEIR HELPERS
 &#34;&#34;&#34;
 
 
 # Switch to camel case
-def must_be_camel(v):
+def _must_be_camel(v):
     return &#34;&#34;.join(x if i == 0 else x.capitalize() for i, x in enumerate(v.split(&#34;_&#34;)))
 
 
 # For certain fields, the keys in their dictionaries must be defined language types
-def must_be_language_strings(v):
+def _must_be_language_keys(v):
     if v is not None and v is dict:
         for key in v.keys():
             if key not in list(get_args(language_types)):
@@ -96,7 +96,7 @@ def must_be_language_strings(v):
 
 
 # Sometimes media must be of the image mime type
-def must_be_image_types(v):
+def _must_be_image_types(v):
     if v is not None:
         if &#34;media_type&#34; in v and v.media_type not in image_mime_types:
             raise ValueError(f&#34;Media type {v.media_type} is not a defined image type.&#34;)
@@ -104,21 +104,21 @@ def must_be_image_types(v):
 
 
 # Link relations must not contain spaces or commas
-def must_not_contain_spaces_or_commas(v):
+def _must_be_no_spaces_or_commas(v):
     if v is str and (&#34; &#34; in v or &#34;,&#34; in v):
         raise ValueError(f&#34;String {v} contains spaces or commas.&#34;)
     return v
 
 
 # Convert a single value into a list
-def must_be_list(v):
+def _must_be_list(v):
     if isinstance(v, list):
         return v
     return [v]
 
 
-# Try to initialize an ObjectModel with a string or dictionary
-def must_be_objects(v):
+# Try to initialize an Object with a string or dictionary
+def _must_be_objects(v):
     if isinstance(v, str):  # If a string, default to ObjectModel
         v = ObjectModel(id=v)
 
@@ -132,11 +132,11 @@ def must_be_objects(v):
 
 # Try to initialize one of the Collection models with a string or dictionary
 # Choose the model based on its contents
-def must_be_collections(v, return_model=False):
-    if isinstance(v, str):  # If a string, default to CollectionModel
+def _must_be_collections(v, return_model=False):
+    if isinstance(v, str):  # If a string, default to Collection
         v = CollectionModel(id=v)
 
-    # Check if dictionary keys are eligible for CollectionPages
+    # Check if dictionary keys are eligible for CollectionPage
     elif isinstance(v, dict):
         if (&#34;part_of&#34; in v.keys() or &#34;next&#34; in v.keys() or &#34;prev&#34; in v.keys()) or (
             &#34;type&#34; in v.keys()
@@ -149,7 +149,7 @@ def must_be_collections(v, return_model=False):
             else:
                 v = CollectionPageModel(**v)
 
-        # Otherwise, assume CollectionModel
+        # Otherwise, assume Collection
         else:
             if &#34;type&#34; in v.keys() and v[&#34;type&#34;] == &#34;OrderedCollection&#34;:
                 v = OrderedCollectionModel(**v)
@@ -170,15 +170,15 @@ def must_be_collections(v, return_model=False):
 
 
 # Try to initialize an OrderedCollection with a string or dictionary
-def must_be_ordered_collections(v):
-    if isinstance(v, str):  # If a string, default to OrderedCollectionModel
+def _must_be_ordered_collections(v):
+    if isinstance(v, str):  # If a string, default to OrderedCollection
         v = OrderedCollectionModel(id=v)
 
-    # If it&#39;s a dictionary, unpack into ObjectModel
+    # If it&#39;s a dictionary, unpack into OrderedCollection
     elif isinstance(v, dict):
         v = OrderedCollectionModel(**v)
 
-    # The name now must be OrderedCollectionModel
+    # The name now must be OrderedCollection
     if v.__class__.__name__ != &#34;OrderedCollectionModel&#34;:
         raise ValueError(f&#34;Must be OrderedCollectionModel.&#34;)
 
@@ -187,16 +187,16 @@ def must_be_ordered_collections(v):
 
 
 # Try to determine if a value is a Link or Object, and then initialize that model
-def must_be_links_or_objects(v):
-    if isinstance(v, str):  # If a string, default to ObjectModel
+def _must_be_links_or_objects(v):
+    if isinstance(v, str):  # If a string, default to Object
         v = ObjectModel(id=v)
 
-    # Check if dictionary keys are eligible for LinkModel
+    # Check if dictionary keys are eligible for Link
     elif isinstance(v, dict):
-        if &#34;href&#34; in v.keys():  # Use LinkModel if there&#39;s an href
+        if &#34;href&#34; in v.keys():  # Use Link if there&#39;s an href
             v = LinkModel(**v)
         else:
-            v = ObjectModel(**v)  # Otherwise, use ObjectModel
+            v = ObjectModel(**v)  # Otherwise, use Object
 
     # The name now must be one of the two possible models
     allowable_names = _core_link_models + _core_object_models
@@ -208,18 +208,16 @@ def must_be_links_or_objects(v):
 
 
 # Try to determine if a value is a Link or Collection, and then initialize that model
-def must_be_links_or_collections(v):
-    if isinstance(v, str):  # If a string, default to CollectionModel
-        v = must_be_collections(v, return_model=True)
+def _must_be_links_or_collections(v):
+    if isinstance(v, str):  # If a string, default to Collection
+        v = _must_be_collections(v, return_model=True)
 
-    # Check if dictionary keys are eligible for LinkModel
+    # Check if dictionary keys are eligible for Link
     elif isinstance(v, dict):
         if &#34;href&#34; in v.keys():
-            v = LinkModel(**v)  # Use LinkModel if there&#39;s an href
+            v = LinkModel(**v)  # Use Link if there&#39;s an href
         else:
-            v = must_be_collections(
-                v, return_model=True
-            )  # Otherwise, use CollectionModel
+            v = _must_be_collections(v, return_model=True)  # Otherwise, use Collection
 
     # The name now must be one of the two possible models
     allowable_names = _core_collection_models + _core_link_models
@@ -231,16 +229,16 @@ def must_be_links_or_collections(v):
 
 
 # Try to determine if a value is a Link or CollectionPage, and then initialize that model
-def must_be_links_or_collectionpages(v):
-    if isinstance(v, str):  # If a string, default to CollectionPageModel
+def _must_be_links_or_collectionpages(v):
+    if isinstance(v, str):  # If a string, default to CollectionPage
         return CollectionPageModel(id=v)
 
-    # Check if dictionary keys are eligible for LinkModel
+    # Check if dictionary keys are eligible for Link
     elif isinstance(v, dict):
         if &#34;href&#34; in v.keys():
-            v = LinkModel(**v)  # Use LinkModel if there&#39;s an href
+            v = LinkModel(**v)  # Use Link if there&#39;s an href
         else:
-            v = CollectionPageModel(**v)  # Otherwise, use CollectionPageModel
+            v = CollectionPageModel(**v)  # Otherwise, use CollectionPage
 
     # The name now must be one of the two possible models
     allowable_names = [&#34;CollectionPageModel&#34;] + _core_link_models
@@ -252,16 +250,16 @@ def must_be_links_or_collectionpages(v):
 
 
 # Try to determine if a value is a Link or Image, and then initialize that model
-def must_be_links_or_images(v):
-    if isinstance(v, str):  # If a string, default to ImageModel
+def _must_be_links_or_images(v):
+    if isinstance(v, str):  # If a string, default to Image
         v = ImageModel(id=v)
 
-    # Check if dictionary keys are eligible for LinkModel
+    # Check if dictionary keys are eligible for Link
     elif isinstance(v, dict):
         if &#34;href&#34; in v.keys():
-            v = LinkModel(**v)  # Use LinkModel if there&#39;s an href
+            v = LinkModel(**v)  # Use Link if there&#39;s an href
         else:
-            v = ImageModel(**v)  # Otherwise, use ImageModel
+            v = ImageModel(**v)  # Otherwise, use Image
 
     # The name now must be one of the two possible models
     allowable_names = [&#34;ImageModel&#34;] + _core_link_models
@@ -272,12 +270,12 @@ def must_be_links_or_images(v):
     return v.model_dump(exclude_none=True)
 
 
-# Try to initialize a Link, otherwise, assume HttpUrl
-def must_be_links_or_urls(v):
+# Try to initialize a Link or assume HttpUrl
+def _must_be_links_or_urls(v):
     if isinstance(v, str):  # If a string, assume HttpUrl
         return v
 
-    # Check if dictionary keys are eligible for LinkModel
+    # Check if dictionary keys are eligible for Link
     elif isinstance(v, dict) and &#34;href&#34; in v.keys():
         return LinkModel(**v)
 
@@ -286,11 +284,11 @@ def must_be_links_or_urls(v):
 
 
 # Try to initialize a Place
-def must_be_places(v):
-    if isinstance(v, str):  # If a string, default to PlaceModel
+def _must_be_places(v):
+    if isinstance(v, str):  # If a string, default to Place
         v = PlaceModel(id=v)
 
-    # Unpack a dictionary into PlaceModel
+    # Unpack a dictionary into Place
     elif isinstance(v, dict):
         v = PlaceModel(**v)
 
@@ -300,6 +298,85 @@ def must_be_places(v):
 
     # Return the model data
     return v.model_dump(exclude_none=True)
+
+
+# Validate list of Links or Objects
+def validate_list_links_or_objects(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_links_or_objects(item)
+    return v
+
+
+# Validate that the keys of a dictionary are languages
+def validate_language_keys(v):
+    return _must_be_language_keys(v)
+
+
+# Validate list of strings with no spaces or commas
+def validate_list_no_spaces_or_commas(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_no_spaces_or_commas(item)
+    return v
+
+
+# Validate that icon ratios are 1x1
+def validate_icons_1x1(v):
+    for pic in v:
+        if pic is not None:
+            if &#34;width&#34; in pic or &#34;height&#34; in pic:
+                if (pic.width and not pic.height) or (pic.height and not pic.width):
+                    raise ValueError(&#34;Icon must have both width and height.&#34;)
+                if pic.width != pic.height:
+                    raise ValueError(&#34;Icon must be 1x1 ratio.&#34;)
+    return v
+
+
+# Validate list of Links or Images
+def validate_list_links_or_images(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_links_or_images(item)
+            _must_be_image_types(v[i])
+    return v
+
+
+# Validate Collections
+def validate_collections(v):
+    return _must_be_collections(v)
+
+
+# Validate Places
+def validate_places(v):
+    return _must_be_places(v)
+
+
+# Validate Objects
+def validate_objects(v):
+    return _must_be_objects(v)
+
+
+# Validate list of Links or HttpUrls
+def validate_list_links_or_urls(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_links_or_urls(item)
+    return v
+
+
+# Validate Links or CollectionPages
+def validate_links_or_collectionpages(v):
+    return _must_be_links_or_collectionpages(v)
+
+
+# Validate Links or Collections
+def validate_links_or_collections(v):
+    return _must_be_links_or_collections(v)
 
 
 &#34;&#34;&#34;
@@ -314,7 +391,7 @@ class CoreModel(BaseModel):
 
     # Ensure camel case for all aliases
     model_config = ConfigDict(
-        alias_generator=must_be_camel,
+        alias_generator=_must_be_camel,
         populate_by_name=True,
         extra=&#34;allow&#34;,  # Allow extra fields for flexibility
     )
@@ -351,28 +428,14 @@ class LinkModel(CoreModel):
     width: int = Field(None, ge=0)
     preview: List[Union[LinkModel, ObjectModel]] = None
 
-    # Validation of name_map for language keys
-    @field_validator(&#34;name_map&#34;)
-    def validate_language_strings(cls, v):
-        return must_be_language_strings(v)
-
-    # Validtion of list of compliant strings for rel
-    @field_validator(&#34;rel&#34;, mode=&#34;before&#34;)
-    def validate_spaces_or_commas(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_not_contain_spaces_or_commas(item)
-        return v
-
-    # Validation of preview for Link or Object
-    @field_validator(&#34;preview&#34;, mode=&#34;before&#34;)
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _link_language_strings = field_validator(&#34;name_map&#34;)(validate_language_keys)
+    _link_list_no_spaces_or_commas = field_validator(&#34;rel&#34;, mode=&#34;before&#34;)(
+        validate_list_no_spaces_or_commas
+    )
+    _link_list_links_or_objects = field_validator(&#34;preview&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_objects
+    )
 
     # Initialize with an optional positional argument for id
     def __init__(self, href: HttpUrl = None, **kwargs) -&gt; None:
@@ -418,7 +481,7 @@ class ObjectModel(CoreModel):
     preview: List[Union[LinkModel, ObjectModel]] = None
     published: datetime = None
     replies: ObjectModel = (
-        None  # For performance, use ObjectModel, but validate as Collection
+        None  # For performance, use Object, but validate as Collection
     )
     start_time: datetime = None
     summary: str = None
@@ -437,45 +500,19 @@ class ObjectModel(CoreModel):
     # Documentation: https://www.w3.org/TR/activitypub/#source-property
     source: ObjectModel = None
 
-    # Validation of content_map for language keys
-    @field_validator(&#34;content_map&#34;, &#34;name_map&#34;, &#34;summary_map&#34;)
-    def validate_language_strings(cls, v):
-        return must_be_language_strings(v)
-
-    # Validation of icon 1x1 ratio
-    @field_validator(&#34;icon&#34;)
-    def validate_1x1(cls, v):
-        for pic in v:
-            if pic is not None:
-                if &#34;width&#34; in pic or &#34;height&#34; in pic:
-                    if (pic.width and not pic.height) or (pic.height and not pic.width):
-                        raise ValueError(&#34;Icon must have both width and height.&#34;)
-                    if pic.width != pic.height:
-                        raise ValueError(&#34;Icon must be 1x1 ratio.&#34;)
-        return v
-
-    # Images and icons must be links or images with correct mime type in a list
-    @field_validator(&#34;icon&#34;, &#34;image&#34;, mode=&#34;before&#34;)
-    def validate_links_or_images(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_images(item)
-                must_be_image_types(v[i])
-        return v
-
-    # Correct to CollectionModel
-    @field_validator(&#34;replies&#34;, mode=&#34;before&#34;)
-    def validate_collections(cls, v):
-        return must_be_collections(v)
-
-    # Correct to PlaceModel
-    @field_validator(&#34;location&#34;, mode=&#34;before&#34;)
-    def validate_places(cls, v):
-        return must_be_places(v)
-
-    # Correct to list of Links or Objects
-    @field_validator(
+    # Validation
+    _object_language_strings = field_validator(
+        &#34;content_map&#34;, &#34;name_map&#34;, &#34;summary_map&#34;
+    )(validate_language_keys)
+    _object_icon_ratios = field_validator(&#34;icon&#34;)(validate_icons_1x1)
+    _object_list_links_or_images = field_validator(&#34;image&#34;, &#34;icon&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_images
+    )
+    _object_collections = field_validator(&#34;replies&#34;, mode=&#34;before&#34;)(
+        validate_collections
+    )
+    _object_places = field_validator(&#34;location&#34;, mode=&#34;before&#34;)(validate_places)
+    _object_list_links_or_objects = field_validator(
         &#34;attachment&#34;,
         &#34;attributed_to&#34;,
         &#34;audience&#34;,
@@ -487,25 +524,11 @@ class ObjectModel(CoreModel):
         &#34;cc&#34;,
         &#34;bcc&#34;,
         mode=&#34;before&#34;,
+        check_fields=False,
+    )(validate_list_links_or_objects)
+    _object_list_links_or_urls = field_validator(&#34;url&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_urls
     )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
-
-    # Correct to list of Links or HttpUrls
-    @field_validator(
-        &#34;url&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_urls(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_urls(item)
-        return v
 
     # Initialize with an optional positional argument for id
     def __init__(self, id: HttpUrl = None, **kwargs) -&gt; None:
@@ -573,27 +596,16 @@ class CollectionModel(ObjectModel):
     last: Union[CollectionPageModel, LinkModel] = None
     items: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;items&#34;,
-        mode=&#34;before&#34;,
+    # Validation
+    _collection_list_links_or_objects = field_validator(&#34;items&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_objects
     )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
-
-    # Correct to Links or CollectionPages
-    @field_validator(
+    _collection_links_or_collectionpages = field_validator(
         &#34;current&#34;,
         &#34;first&#34;,
         &#34;last&#34;,
         mode=&#34;before&#34;,
-    )
-    def validate_links_or_collectionpages(cls, v):
-        return must_be_links_or_collectionpages(v)
+    )(validate_links_or_collectionpages)
 
 
 class OrderedCollectionModel(CollectionModel):
@@ -608,17 +620,10 @@ class OrderedCollectionModel(CollectionModel):
     items: None = None  # No items, only orderedItems
     ordered_items: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;ordered_items&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _orderedcollection_list_links_or_objects = field_validator(
+        &#34;ordered_items&#34;, mode=&#34;before&#34;
+    )(validate_list_links_or_objects)
 
 
 class CollectionPageModel(CollectionModel):
@@ -634,22 +639,15 @@ class CollectionPageModel(CollectionModel):
     next: Union[LinkModel, CollectionPageModel] = None
     prev: Union[LinkModel, CollectionPageModel] = None
 
-    # Correct to Links or Collections
-    @field_validator(
-        &#34;part_of&#34;,
-        mode=&#34;before&#34;,
+    # Validation
+    _collectionpage_links_or_collections = field_validator(&#34;part_of&#34;, mode=&#34;before&#34;)(
+        validate_links_or_collections
     )
-    def validate_links_or_collections(cls, v):
-        return must_be_links_or_collections(v)
-
-    # Correct to Links or CollectionPages
-    @field_validator(
+    _collectionpage_links_or_collectionpages = field_validator(
         &#34;next&#34;,
         &#34;prev&#34;,
         mode=&#34;before&#34;,
-    )
-    def validate_links_or_collectionpages(cls, v):
-        return must_be_links_or_collectionpages(v)
+    )(validate_links_or_collectionpages)
 
 
 class OrderedCollectionPageModel(CollectionPageModel):
@@ -665,17 +663,10 @@ class OrderedCollectionPageModel(CollectionPageModel):
     items: None = None  # No items, only orderedItems
     ordered_items: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;ordered_items&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _orderedcollectionpage_list_links_or_objects = field_validator(
+        &#34;ordered_items&#34;, mode=&#34;before&#34;
+    )(validate_list_links_or_objects)
 
 
 &#34;&#34;&#34;
@@ -700,26 +691,16 @@ class ActivityModel(ObjectModel):
     origin: List[Union[LinkModel, ObjectModel]] = None
     instrument: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to Object
-    @field_validator(&#34;object&#34;, mode=&#34;before&#34;)
-    def validate_objects(cls, v):
-        return must_be_objects(v)
-
-    # Correct to list of Links or Objects
-    @field_validator(
+    # Validation
+    _activity_objects = field_validator(&#34;object&#34;, mode=&#34;before&#34;)(validate_objects)
+    _activity_list_links_or_objects = field_validator(
         &#34;actor&#34;,
         &#34;target&#34;,
         &#34;result&#34;,
         &#34;origin&#34;,
         &#34;instrument&#34;,
         mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    )(validate_list_links_or_objects)
 
 
 class IntransitiveActivityModel(ActivityModel):
@@ -742,8 +723,8 @@ class IntransitiveActivityModel(ActivityModel):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="activitypubdantic.models.core.must_be_camel"><code class="name flex">
-<span>def <span class="ident">must_be_camel</span></span>(<span>v)</span>
+<dt id="activitypubdantic.models.core.validate_collections"><code class="name flex">
+<span>def <span class="ident">validate_collections</span></span>(<span>v)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -751,12 +732,12 @@ class IntransitiveActivityModel(ActivityModel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def must_be_camel(v):
-    return &#34;&#34;.join(x if i == 0 else x.capitalize() for i, x in enumerate(v.split(&#34;_&#34;)))</code></pre>
+<pre><code class="python">def validate_collections(v):
+    return _must_be_collections(v)</code></pre>
 </details>
 </dd>
-<dt id="activitypubdantic.models.core.must_be_collections"><code class="name flex">
-<span>def <span class="ident">must_be_collections</span></span>(<span>v, return_model=False)</span>
+<dt id="activitypubdantic.models.core.validate_icons_1x1"><code class="name flex">
+<span>def <span class="ident">validate_icons_1x1</span></span>(<span>v)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -764,61 +745,19 @@ class IntransitiveActivityModel(ActivityModel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def must_be_collections(v, return_model=False):
-    if isinstance(v, str):  # If a string, default to CollectionModel
-        v = CollectionModel(id=v)
-
-    # Check if dictionary keys are eligible for CollectionPages
-    elif isinstance(v, dict):
-        if (&#34;part_of&#34; in v.keys() or &#34;next&#34; in v.keys() or &#34;prev&#34; in v.keys()) or (
-            &#34;type&#34; in v.keys()
-            and v[&#34;type&#34;] in [&#34;CollectionPage&#34;, &#34;OrderedCollectionPage&#34;]
-        ):
-            if (
-                &#34;type&#34; in v.keys() and v[&#34;type&#34;] == &#34;OrderedCollectionPage&#34;
-            ) or &#34;start_index&#34; in v.keys():
-                v = OrderedCollectionPageModel(**v)
-            else:
-                v = CollectionPageModel(**v)
-
-        # Otherwise, assume CollectionModel
-        else:
-            if &#34;type&#34; in v.keys() and v[&#34;type&#34;] == &#34;OrderedCollection&#34;:
-                v = OrderedCollectionModel(**v)
-            else:
-                v = CollectionModel(**v)
-
-    # The name now must be one of the four possible models
-    if not v.__class__.__name__ in _core_collection_models:
-        raise ValueError(
-            &#34;Must be one of {}.&#34;.format(&#34;, &#34;.join(_core_collection_models))
-        )
-
-    # Return the model data
-    if return_model:
-        return v
-    else:
-        return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_image_types"><code class="name flex">
-<span>def <span class="ident">must_be_image_types</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_image_types(v):
-    if v is not None:
-        if &#34;media_type&#34; in v and v.media_type not in image_mime_types:
-            raise ValueError(f&#34;Media type {v.media_type} is not a defined image type.&#34;)
+<pre><code class="python">def validate_icons_1x1(v):
+    for pic in v:
+        if pic is not None:
+            if &#34;width&#34; in pic or &#34;height&#34; in pic:
+                if (pic.width and not pic.height) or (pic.height and not pic.width):
+                    raise ValueError(&#34;Icon must have both width and height.&#34;)
+                if pic.width != pic.height:
+                    raise ValueError(&#34;Icon must be 1x1 ratio.&#34;)
     return v</code></pre>
 </details>
 </dd>
-<dt id="activitypubdantic.models.core.must_be_language_strings"><code class="name flex">
-<span>def <span class="ident">must_be_language_strings</span></span>(<span>v)</span>
+<dt id="activitypubdantic.models.core.validate_language_keys"><code class="name flex">
+<span>def <span class="ident">validate_language_keys</span></span>(<span>v)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -826,18 +765,56 @@ class IntransitiveActivityModel(ActivityModel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def must_be_language_strings(v):
-    if v is not None and v is dict:
-        for key in v.keys():
-            if key not in list(get_args(language_types)):
-                raise ValueError(f&#34;Key {key} is not a defined language type.&#34;)
-            if type(v[key]) != str:  # TODO: Attempt conversion to string
-                raise ValueError(f&#34;Key {key} value {v[key]} is not a string.&#34;)
+<pre><code class="python">def validate_language_keys(v):
+    return _must_be_language_keys(v)</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_links_or_collectionpages"><code class="name flex">
+<span>def <span class="ident">validate_links_or_collectionpages</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_links_or_collectionpages(v):
+    return _must_be_links_or_collectionpages(v)</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_links_or_collections"><code class="name flex">
+<span>def <span class="ident">validate_links_or_collections</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_links_or_collections(v):
+    return _must_be_links_or_collections(v)</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_list_links_or_images"><code class="name flex">
+<span>def <span class="ident">validate_list_links_or_images</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_list_links_or_images(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_links_or_images(item)
+            _must_be_image_types(v[i])
     return v</code></pre>
 </details>
 </dd>
-<dt id="activitypubdantic.models.core.must_be_links_or_collectionpages"><code class="name flex">
-<span>def <span class="ident">must_be_links_or_collectionpages</span></span>(<span>v)</span>
+<dt id="activitypubdantic.models.core.validate_list_links_or_objects"><code class="name flex">
+<span>def <span class="ident">validate_list_links_or_objects</span></span>(<span>v)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -845,138 +822,16 @@ class IntransitiveActivityModel(ActivityModel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def must_be_links_or_collectionpages(v):
-    if isinstance(v, str):  # If a string, default to CollectionPageModel
-        return CollectionPageModel(id=v)
-
-    # Check if dictionary keys are eligible for LinkModel
-    elif isinstance(v, dict):
-        if &#34;href&#34; in v.keys():
-            v = LinkModel(**v)  # Use LinkModel if there&#39;s an href
-        else:
-            v = CollectionPageModel(**v)  # Otherwise, use CollectionPageModel
-
-    # The name now must be one of the two possible models
-    allowable_names = [&#34;CollectionPageModel&#34;] + _core_link_models
-    if not v.__class__.__name__ in allowable_names:
-        raise ValueError(&#34;Must be one of {}.&#34;.format(&#34;, &#34;.join(allowable_names)))
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_links_or_collections"><code class="name flex">
-<span>def <span class="ident">must_be_links_or_collections</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_links_or_collections(v):
-    if isinstance(v, str):  # If a string, default to CollectionModel
-        v = must_be_collections(v, return_model=True)
-
-    # Check if dictionary keys are eligible for LinkModel
-    elif isinstance(v, dict):
-        if &#34;href&#34; in v.keys():
-            v = LinkModel(**v)  # Use LinkModel if there&#39;s an href
-        else:
-            v = must_be_collections(
-                v, return_model=True
-            )  # Otherwise, use CollectionModel
-
-    # The name now must be one of the two possible models
-    allowable_names = _core_collection_models + _core_link_models
-    if not v.__class__.__name__ in allowable_names:
-        raise ValueError(&#34;Must be one of {}.&#34;.format(&#34;, &#34;.join(allowable_names)))
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_links_or_images"><code class="name flex">
-<span>def <span class="ident">must_be_links_or_images</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_links_or_images(v):
-    if isinstance(v, str):  # If a string, default to ImageModel
-        v = ImageModel(id=v)
-
-    # Check if dictionary keys are eligible for LinkModel
-    elif isinstance(v, dict):
-        if &#34;href&#34; in v.keys():
-            v = LinkModel(**v)  # Use LinkModel if there&#39;s an href
-        else:
-            v = ImageModel(**v)  # Otherwise, use ImageModel
-
-    # The name now must be one of the two possible models
-    allowable_names = [&#34;ImageModel&#34;] + _core_link_models
-    if not v.__class__.__name__ in allowable_names:
-        raise ValueError(&#34;Must be one of {}.&#34;.format(&#34;, &#34;.join(allowable_names)))
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_links_or_objects"><code class="name flex">
-<span>def <span class="ident">must_be_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_links_or_objects(v):
-    if isinstance(v, str):  # If a string, default to ObjectModel
-        v = ObjectModel(id=v)
-
-    # Check if dictionary keys are eligible for LinkModel
-    elif isinstance(v, dict):
-        if &#34;href&#34; in v.keys():  # Use LinkModel if there&#39;s an href
-            v = LinkModel(**v)
-        else:
-            v = ObjectModel(**v)  # Otherwise, use ObjectModel
-
-    # The name now must be one of the two possible models
-    allowable_names = _core_link_models + _core_object_models
-    if not v.__class__.__name__ in allowable_names:
-        raise ValueError(&#34;Must be one of {}.&#34;.format(&#34;, &#34;.join(allowable_names)))
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_links_or_urls"><code class="name flex">
-<span>def <span class="ident">must_be_links_or_urls</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_links_or_urls(v):
-    if isinstance(v, str):  # If a string, assume HttpUrl
-        return v
-
-    # Check if dictionary keys are eligible for LinkModel
-    elif isinstance(v, dict) and &#34;href&#34; in v.keys():
-        return LinkModel(**v)
-
-    # Because not always returning a model, perform no further validation
+<pre><code class="python">def validate_list_links_or_objects(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_links_or_objects(item)
     return v</code></pre>
 </details>
 </dd>
-<dt id="activitypubdantic.models.core.must_be_list"><code class="name flex">
-<span>def <span class="ident">must_be_list</span></span>(<span>v)</span>
+<dt id="activitypubdantic.models.core.validate_list_links_or_urls"><code class="name flex">
+<span>def <span class="ident">validate_list_links_or_urls</span></span>(<span>v)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -984,96 +839,55 @@ class IntransitiveActivityModel(ActivityModel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def must_be_list(v):
-    if isinstance(v, list):
-        return v
-    return [v]</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_objects"><code class="name flex">
-<span>def <span class="ident">must_be_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_objects(v):
-    if isinstance(v, str):  # If a string, default to ObjectModel
-        v = ObjectModel(id=v)
-
-    # If it&#39;s a dictionary, unpack into ObjectModel
-    elif isinstance(v, dict):
-        v = ObjectModel(**v)
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_ordered_collections"><code class="name flex">
-<span>def <span class="ident">must_be_ordered_collections</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_ordered_collections(v):
-    if isinstance(v, str):  # If a string, default to OrderedCollectionModel
-        v = OrderedCollectionModel(id=v)
-
-    # If it&#39;s a dictionary, unpack into ObjectModel
-    elif isinstance(v, dict):
-        v = OrderedCollectionModel(**v)
-
-    # The name now must be OrderedCollectionModel
-    if v.__class__.__name__ != &#34;OrderedCollectionModel&#34;:
-        raise ValueError(f&#34;Must be OrderedCollectionModel.&#34;)
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_be_places"><code class="name flex">
-<span>def <span class="ident">must_be_places</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_be_places(v):
-    if isinstance(v, str):  # If a string, default to PlaceModel
-        v = PlaceModel(id=v)
-
-    # Unpack a dictionary into PlaceModel
-    elif isinstance(v, dict):
-        v = PlaceModel(**v)
-
-    # The name now must be one possible model
-    if v.__class__.__name__ != &#34;PlaceModel&#34;:
-        raise ValueError(f&#34;Must be a PlaceModel.&#34;)
-
-    # Return the model data
-    return v.model_dump(exclude_none=True)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.must_not_contain_spaces_or_commas"><code class="name flex">
-<span>def <span class="ident">must_not_contain_spaces_or_commas</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def must_not_contain_spaces_or_commas(v):
-    if v is str and (&#34; &#34; in v or &#34;,&#34; in v):
-        raise ValueError(f&#34;String {v} contains spaces or commas.&#34;)
+<pre><code class="python">def validate_list_links_or_urls(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_links_or_urls(item)
     return v</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_list_no_spaces_or_commas"><code class="name flex">
+<span>def <span class="ident">validate_list_no_spaces_or_commas</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_list_no_spaces_or_commas(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_no_spaces_or_commas(item)
+    return v</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_objects"><code class="name flex">
+<span>def <span class="ident">validate_objects</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_objects(v):
+    return _must_be_objects(v)</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_places"><code class="name flex">
+<span>def <span class="ident">validate_places</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_places(v):
+    return _must_be_places(v)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1113,26 +927,16 @@ allow <code>self</code> as a field name.</p></div>
     origin: List[Union[LinkModel, ObjectModel]] = None
     instrument: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to Object
-    @field_validator(&#34;object&#34;, mode=&#34;before&#34;)
-    def validate_objects(cls, v):
-        return must_be_objects(v)
-
-    # Correct to list of Links or Objects
-    @field_validator(
+    # Validation
+    _activity_objects = field_validator(&#34;object&#34;, mode=&#34;before&#34;)(validate_objects)
+    _activity_list_links_or_objects = field_validator(
         &#34;actor&#34;,
         &#34;target&#34;,
         &#34;result&#34;,
         &#34;origin&#34;,
         &#34;instrument&#34;,
         mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v</code></pre>
+    )(validate_list_links_or_objects)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1205,48 +1009,6 @@ allow <code>self</code> as a field name.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.ActivityModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;actor&#34;,
-    &#34;target&#34;,
-    &#34;result&#34;,
-    &#34;origin&#34;,
-    &#34;instrument&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ActivityModel.validate_objects"><code class="name flex">
-<span>def <span class="ident">validate_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;object&#34;, mode=&#34;before&#34;)
-def validate_objects(cls, v):
-    return must_be_objects(v)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="activitypubdantic.models.core.CollectionModel"><code class="flex name class">
 <span>class <span class="ident">CollectionModel</span></span>
@@ -1277,27 +1039,16 @@ allow <code>self</code> as a field name.</p></div>
     last: Union[CollectionPageModel, LinkModel] = None
     items: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;items&#34;,
-        mode=&#34;before&#34;,
+    # Validation
+    _collection_list_links_or_objects = field_validator(&#34;items&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_objects
     )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
-
-    # Correct to Links or CollectionPages
-    @field_validator(
+    _collection_links_or_collectionpages = field_validator(
         &#34;current&#34;,
         &#34;first&#34;,
         &#34;last&#34;,
         mode=&#34;before&#34;,
-    )
-    def validate_links_or_collectionpages(cls, v):
-        return must_be_links_or_collectionpages(v)</code></pre>
+    )(validate_links_or_collectionpages)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1345,49 +1096,6 @@ allow <code>self</code> as a field name.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.CollectionModel.validate_links_or_collectionpages"><code class="name flex">
-<span>def <span class="ident">validate_links_or_collectionpages</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;current&#34;,
-    &#34;first&#34;,
-    &#34;last&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_collectionpages(cls, v):
-    return must_be_links_or_collectionpages(v)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.CollectionModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;items&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="activitypubdantic.models.core.CollectionPageModel"><code class="flex name class">
 <span>class <span class="ident">CollectionPageModel</span></span>
@@ -1416,22 +1124,15 @@ allow <code>self</code> as a field name.</p></div>
     next: Union[LinkModel, CollectionPageModel] = None
     prev: Union[LinkModel, CollectionPageModel] = None
 
-    # Correct to Links or Collections
-    @field_validator(
-        &#34;part_of&#34;,
-        mode=&#34;before&#34;,
+    # Validation
+    _collectionpage_links_or_collections = field_validator(&#34;part_of&#34;, mode=&#34;before&#34;)(
+        validate_links_or_collections
     )
-    def validate_links_or_collections(cls, v):
-        return must_be_links_or_collections(v)
-
-    # Correct to Links or CollectionPages
-    @field_validator(
+    _collectionpage_links_or_collectionpages = field_validator(
         &#34;next&#34;,
         &#34;prev&#34;,
         mode=&#34;before&#34;,
-    )
-    def validate_links_or_collectionpages(cls, v):
-        return must_be_links_or_collectionpages(v)</code></pre>
+    )(validate_links_or_collectionpages)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1471,44 +1172,6 @@ allow <code>self</code> as a field name.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.CollectionPageModel.validate_links_or_collectionpages"><code class="name flex">
-<span>def <span class="ident">validate_links_or_collectionpages</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;next&#34;,
-    &#34;prev&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_collectionpages(cls, v):
-    return must_be_links_or_collectionpages(v)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.CollectionPageModel.validate_links_or_collections"><code class="name flex">
-<span>def <span class="ident">validate_links_or_collections</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;part_of&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_collections(cls, v):
-    return must_be_links_or_collections(v)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="activitypubdantic.models.core.CoreModel"><code class="flex name class">
 <span>class <span class="ident">CoreModel</span></span>
@@ -1531,7 +1194,7 @@ allow <code>self</code> as a field name.</p></div>
 
     # Ensure camel case for all aliases
     model_config = ConfigDict(
-        alias_generator=must_be_camel,
+        alias_generator=_must_be_camel,
         populate_by_name=True,
         extra=&#34;allow&#34;,  # Allow extra fields for flexibility
     )
@@ -1761,28 +1424,14 @@ allow <code>self</code> as a field name.</p></div>
     width: int = Field(None, ge=0)
     preview: List[Union[LinkModel, ObjectModel]] = None
 
-    # Validation of name_map for language keys
-    @field_validator(&#34;name_map&#34;)
-    def validate_language_strings(cls, v):
-        return must_be_language_strings(v)
-
-    # Validtion of list of compliant strings for rel
-    @field_validator(&#34;rel&#34;, mode=&#34;before&#34;)
-    def validate_spaces_or_commas(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_not_contain_spaces_or_commas(item)
-        return v
-
-    # Validation of preview for Link or Object
-    @field_validator(&#34;preview&#34;, mode=&#34;before&#34;)
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _link_language_strings = field_validator(&#34;name_map&#34;)(validate_language_keys)
+    _link_list_no_spaces_or_commas = field_validator(&#34;rel&#34;, mode=&#34;before&#34;)(
+        validate_list_no_spaces_or_commas
+    )
+    _link_list_links_or_objects = field_validator(&#34;preview&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_objects
+    )
 
     # Initialize with an optional positional argument for id
     def __init__(self, href: HttpUrl = None, **kwargs) -&gt; None:
@@ -1851,59 +1500,6 @@ allow <code>self</code> as a field name.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.LinkModel.validate_language_strings"><code class="name flex">
-<span>def <span class="ident">validate_language_strings</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;name_map&#34;)
-def validate_language_strings(cls, v):
-    return must_be_language_strings(v)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.LinkModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;preview&#34;, mode=&#34;before&#34;)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.LinkModel.validate_spaces_or_commas"><code class="name flex">
-<span>def <span class="ident">validate_spaces_or_commas</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;rel&#34;, mode=&#34;before&#34;)
-def validate_spaces_or_commas(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_not_contain_spaces_or_commas(item)
-    return v</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="activitypubdantic.models.core.ObjectModel"><code class="flex name class">
 <span>class <span class="ident">ObjectModel</span></span>
@@ -1951,7 +1547,7 @@ allow <code>self</code> as a field name.</p></div>
     preview: List[Union[LinkModel, ObjectModel]] = None
     published: datetime = None
     replies: ObjectModel = (
-        None  # For performance, use ObjectModel, but validate as Collection
+        None  # For performance, use Object, but validate as Collection
     )
     start_time: datetime = None
     summary: str = None
@@ -1970,45 +1566,19 @@ allow <code>self</code> as a field name.</p></div>
     # Documentation: https://www.w3.org/TR/activitypub/#source-property
     source: ObjectModel = None
 
-    # Validation of content_map for language keys
-    @field_validator(&#34;content_map&#34;, &#34;name_map&#34;, &#34;summary_map&#34;)
-    def validate_language_strings(cls, v):
-        return must_be_language_strings(v)
-
-    # Validation of icon 1x1 ratio
-    @field_validator(&#34;icon&#34;)
-    def validate_1x1(cls, v):
-        for pic in v:
-            if pic is not None:
-                if &#34;width&#34; in pic or &#34;height&#34; in pic:
-                    if (pic.width and not pic.height) or (pic.height and not pic.width):
-                        raise ValueError(&#34;Icon must have both width and height.&#34;)
-                    if pic.width != pic.height:
-                        raise ValueError(&#34;Icon must be 1x1 ratio.&#34;)
-        return v
-
-    # Images and icons must be links or images with correct mime type in a list
-    @field_validator(&#34;icon&#34;, &#34;image&#34;, mode=&#34;before&#34;)
-    def validate_links_or_images(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_images(item)
-                must_be_image_types(v[i])
-        return v
-
-    # Correct to CollectionModel
-    @field_validator(&#34;replies&#34;, mode=&#34;before&#34;)
-    def validate_collections(cls, v):
-        return must_be_collections(v)
-
-    # Correct to PlaceModel
-    @field_validator(&#34;location&#34;, mode=&#34;before&#34;)
-    def validate_places(cls, v):
-        return must_be_places(v)
-
-    # Correct to list of Links or Objects
-    @field_validator(
+    # Validation
+    _object_language_strings = field_validator(
+        &#34;content_map&#34;, &#34;name_map&#34;, &#34;summary_map&#34;
+    )(validate_language_keys)
+    _object_icon_ratios = field_validator(&#34;icon&#34;)(validate_icons_1x1)
+    _object_list_links_or_images = field_validator(&#34;image&#34;, &#34;icon&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_images
+    )
+    _object_collections = field_validator(&#34;replies&#34;, mode=&#34;before&#34;)(
+        validate_collections
+    )
+    _object_places = field_validator(&#34;location&#34;, mode=&#34;before&#34;)(validate_places)
+    _object_list_links_or_objects = field_validator(
         &#34;attachment&#34;,
         &#34;attributed_to&#34;,
         &#34;audience&#34;,
@@ -2020,25 +1590,11 @@ allow <code>self</code> as a field name.</p></div>
         &#34;cc&#34;,
         &#34;bcc&#34;,
         mode=&#34;before&#34;,
+        check_fields=False,
+    )(validate_list_links_or_objects)
+    _object_list_links_or_urls = field_validator(&#34;url&#34;, mode=&#34;before&#34;)(
+        validate_list_links_or_urls
     )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
-
-    # Correct to list of Links or HttpUrls
-    @field_validator(
-        &#34;url&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_urls(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_urls(item)
-        return v
 
     # Initialize with an optional positional argument for id
     def __init__(self, id: HttpUrl = None, **kwargs) -&gt; None:
@@ -2201,142 +1757,6 @@ allow <code>self</code> as a field name.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_1x1"><code class="name flex">
-<span>def <span class="ident">validate_1x1</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;icon&#34;)
-def validate_1x1(cls, v):
-    for pic in v:
-        if pic is not None:
-            if &#34;width&#34; in pic or &#34;height&#34; in pic:
-                if (pic.width and not pic.height) or (pic.height and not pic.width):
-                    raise ValueError(&#34;Icon must have both width and height.&#34;)
-                if pic.width != pic.height:
-                    raise ValueError(&#34;Icon must be 1x1 ratio.&#34;)
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_collections"><code class="name flex">
-<span>def <span class="ident">validate_collections</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;replies&#34;, mode=&#34;before&#34;)
-def validate_collections(cls, v):
-    return must_be_collections(v)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_language_strings"><code class="name flex">
-<span>def <span class="ident">validate_language_strings</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;content_map&#34;, &#34;name_map&#34;, &#34;summary_map&#34;)
-def validate_language_strings(cls, v):
-    return must_be_language_strings(v)</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_links_or_images"><code class="name flex">
-<span>def <span class="ident">validate_links_or_images</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;icon&#34;, &#34;image&#34;, mode=&#34;before&#34;)
-def validate_links_or_images(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_images(item)
-            must_be_image_types(v[i])
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;attachment&#34;,
-    &#34;attributed_to&#34;,
-    &#34;audience&#34;,
-    &#34;generator&#34;,
-    &#34;in_reply_to&#34;,
-    &#34;preview&#34;,
-    &#34;tag&#34;,
-    &#34;bto&#34;,
-    &#34;cc&#34;,
-    &#34;bcc&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_links_or_urls"><code class="name flex">
-<span>def <span class="ident">validate_links_or_urls</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;url&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_urls(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_urls(item)
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.core.ObjectModel.validate_places"><code class="name flex">
-<span>def <span class="ident">validate_places</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(&#34;location&#34;, mode=&#34;before&#34;)
-def validate_places(cls, v):
-    return must_be_places(v)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="activitypubdantic.models.core.OrderedCollectionModel"><code class="flex name class">
 <span>class <span class="ident">OrderedCollectionModel</span></span>
@@ -2364,17 +1784,10 @@ allow <code>self</code> as a field name.</p></div>
     items: None = None  # No items, only orderedItems
     ordered_items: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;ordered_items&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v</code></pre>
+    # Validation
+    _orderedcollection_list_links_or_objects = field_validator(
+        &#34;ordered_items&#34;, mode=&#34;before&#34;
+    )(validate_list_links_or_objects)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2406,30 +1819,6 @@ allow <code>self</code> as a field name.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.OrderedCollectionModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;ordered_items&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="activitypubdantic.models.core.OrderedCollectionPageModel"><code class="flex name class">
 <span>class <span class="ident">OrderedCollectionPageModel</span></span>
@@ -2458,17 +1847,10 @@ allow <code>self</code> as a field name.</p></div>
     items: None = None  # No items, only orderedItems
     ordered_items: List[Union[LinkModel, ObjectModel]] = None
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;ordered_items&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v</code></pre>
+    # Validation
+    _orderedcollectionpage_list_links_or_objects = field_validator(
+        &#34;ordered_items&#34;, mode=&#34;before&#34;
+    )(validate_list_links_or_objects)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2503,30 +1885,6 @@ allow <code>self</code> as a field name.</p></div>
 <dt id="activitypubdantic.models.core.OrderedCollectionPageModel.type"><code class="name">var <span class="ident">type</span> : Literal['OrderedCollectionPage']</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.core.OrderedCollectionPageModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;ordered_items&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -2624,27 +1982,24 @@ allow <code>self</code> as a field name.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="activitypubdantic.models.core.must_be_camel" href="#activitypubdantic.models.core.must_be_camel">must_be_camel</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_collections" href="#activitypubdantic.models.core.must_be_collections">must_be_collections</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_image_types" href="#activitypubdantic.models.core.must_be_image_types">must_be_image_types</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_language_strings" href="#activitypubdantic.models.core.must_be_language_strings">must_be_language_strings</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_links_or_collectionpages" href="#activitypubdantic.models.core.must_be_links_or_collectionpages">must_be_links_or_collectionpages</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_links_or_collections" href="#activitypubdantic.models.core.must_be_links_or_collections">must_be_links_or_collections</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_links_or_images" href="#activitypubdantic.models.core.must_be_links_or_images">must_be_links_or_images</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_links_or_objects" href="#activitypubdantic.models.core.must_be_links_or_objects">must_be_links_or_objects</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_links_or_urls" href="#activitypubdantic.models.core.must_be_links_or_urls">must_be_links_or_urls</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_list" href="#activitypubdantic.models.core.must_be_list">must_be_list</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_objects" href="#activitypubdantic.models.core.must_be_objects">must_be_objects</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_ordered_collections" href="#activitypubdantic.models.core.must_be_ordered_collections">must_be_ordered_collections</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_be_places" href="#activitypubdantic.models.core.must_be_places">must_be_places</a></code></li>
-<li><code><a title="activitypubdantic.models.core.must_not_contain_spaces_or_commas" href="#activitypubdantic.models.core.must_not_contain_spaces_or_commas">must_not_contain_spaces_or_commas</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_collections" href="#activitypubdantic.models.core.validate_collections">validate_collections</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_icons_1x1" href="#activitypubdantic.models.core.validate_icons_1x1">validate_icons_1x1</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_language_keys" href="#activitypubdantic.models.core.validate_language_keys">validate_language_keys</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_links_or_collectionpages" href="#activitypubdantic.models.core.validate_links_or_collectionpages">validate_links_or_collectionpages</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_links_or_collections" href="#activitypubdantic.models.core.validate_links_or_collections">validate_links_or_collections</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_list_links_or_images" href="#activitypubdantic.models.core.validate_list_links_or_images">validate_list_links_or_images</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_list_links_or_objects" href="#activitypubdantic.models.core.validate_list_links_or_objects">validate_list_links_or_objects</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_list_links_or_urls" href="#activitypubdantic.models.core.validate_list_links_or_urls">validate_list_links_or_urls</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_list_no_spaces_or_commas" href="#activitypubdantic.models.core.validate_list_no_spaces_or_commas">validate_list_no_spaces_or_commas</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_objects" href="#activitypubdantic.models.core.validate_objects">validate_objects</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_places" href="#activitypubdantic.models.core.validate_places">validate_places</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="activitypubdantic.models.core.ActivityModel" href="#activitypubdantic.models.core.ActivityModel">ActivityModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.core.ActivityModel.actor" href="#activitypubdantic.models.core.ActivityModel.actor">actor</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ActivityModel.instrument" href="#activitypubdantic.models.core.ActivityModel.instrument">instrument</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ActivityModel.model_config" href="#activitypubdantic.models.core.ActivityModel.model_config">model_config</a></code></li>
@@ -2654,13 +2009,11 @@ allow <code>self</code> as a field name.</p></div>
 <li><code><a title="activitypubdantic.models.core.ActivityModel.result" href="#activitypubdantic.models.core.ActivityModel.result">result</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ActivityModel.target" href="#activitypubdantic.models.core.ActivityModel.target">target</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ActivityModel.type" href="#activitypubdantic.models.core.ActivityModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ActivityModel.validate_links_or_objects" href="#activitypubdantic.models.core.ActivityModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ActivityModel.validate_objects" href="#activitypubdantic.models.core.ActivityModel.validate_objects">validate_objects</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.models.core.CollectionModel" href="#activitypubdantic.models.core.CollectionModel">CollectionModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.core.CollectionModel.current" href="#activitypubdantic.models.core.CollectionModel.current">current</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionModel.first" href="#activitypubdantic.models.core.CollectionModel.first">first</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionModel.items" href="#activitypubdantic.models.core.CollectionModel.items">items</a></code></li>
@@ -2669,21 +2022,17 @@ allow <code>self</code> as a field name.</p></div>
 <li><code><a title="activitypubdantic.models.core.CollectionModel.model_fields" href="#activitypubdantic.models.core.CollectionModel.model_fields">model_fields</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionModel.total_items" href="#activitypubdantic.models.core.CollectionModel.total_items">total_items</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionModel.type" href="#activitypubdantic.models.core.CollectionModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.core.CollectionModel.validate_links_or_collectionpages" href="#activitypubdantic.models.core.CollectionModel.validate_links_or_collectionpages">validate_links_or_collectionpages</a></code></li>
-<li><code><a title="activitypubdantic.models.core.CollectionModel.validate_links_or_objects" href="#activitypubdantic.models.core.CollectionModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.core.CollectionPageModel.model_config" href="#activitypubdantic.models.core.CollectionPageModel.model_config">model_config</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionPageModel.model_fields" href="#activitypubdantic.models.core.CollectionPageModel.model_fields">model_fields</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionPageModel.next" href="#activitypubdantic.models.core.CollectionPageModel.next">next</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionPageModel.part_of" href="#activitypubdantic.models.core.CollectionPageModel.part_of">part_of</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionPageModel.prev" href="#activitypubdantic.models.core.CollectionPageModel.prev">prev</a></code></li>
 <li><code><a title="activitypubdantic.models.core.CollectionPageModel.type" href="#activitypubdantic.models.core.CollectionPageModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.core.CollectionPageModel.validate_links_or_collectionpages" href="#activitypubdantic.models.core.CollectionPageModel.validate_links_or_collectionpages">validate_links_or_collectionpages</a></code></li>
-<li><code><a title="activitypubdantic.models.core.CollectionPageModel.validate_links_or_collections" href="#activitypubdantic.models.core.CollectionPageModel.validate_links_or_collections">validate_links_or_collections</a></code></li>
 </ul>
 </li>
 <li>
@@ -2721,7 +2070,7 @@ allow <code>self</code> as a field name.</p></div>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.core.LinkModel.height" href="#activitypubdantic.models.core.LinkModel.height">height</a></code></li>
 <li><code><a title="activitypubdantic.models.core.LinkModel.href" href="#activitypubdantic.models.core.LinkModel.href">href</a></code></li>
 <li><code><a title="activitypubdantic.models.core.LinkModel.hreflang" href="#activitypubdantic.models.core.LinkModel.hreflang">hreflang</a></code></li>
@@ -2733,15 +2082,12 @@ allow <code>self</code> as a field name.</p></div>
 <li><code><a title="activitypubdantic.models.core.LinkModel.preview" href="#activitypubdantic.models.core.LinkModel.preview">preview</a></code></li>
 <li><code><a title="activitypubdantic.models.core.LinkModel.rel" href="#activitypubdantic.models.core.LinkModel.rel">rel</a></code></li>
 <li><code><a title="activitypubdantic.models.core.LinkModel.type" href="#activitypubdantic.models.core.LinkModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.core.LinkModel.validate_language_strings" href="#activitypubdantic.models.core.LinkModel.validate_language_strings">validate_language_strings</a></code></li>
-<li><code><a title="activitypubdantic.models.core.LinkModel.validate_links_or_objects" href="#activitypubdantic.models.core.LinkModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
-<li><code><a title="activitypubdantic.models.core.LinkModel.validate_spaces_or_commas" href="#activitypubdantic.models.core.LinkModel.validate_spaces_or_commas">validate_spaces_or_commas</a></code></li>
 <li><code><a title="activitypubdantic.models.core.LinkModel.width" href="#activitypubdantic.models.core.LinkModel.width">width</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.core.ObjectModel.attachment" href="#activitypubdantic.models.core.ObjectModel.attachment">attachment</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ObjectModel.attributed_to" href="#activitypubdantic.models.core.ObjectModel.attributed_to">attributed_to</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ObjectModel.audience" href="#activitypubdantic.models.core.ObjectModel.audience">audience</a></code></li>
@@ -2775,13 +2121,6 @@ allow <code>self</code> as a field name.</p></div>
 <li><code><a title="activitypubdantic.models.core.ObjectModel.type" href="#activitypubdantic.models.core.ObjectModel.type">type</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ObjectModel.updated" href="#activitypubdantic.models.core.ObjectModel.updated">updated</a></code></li>
 <li><code><a title="activitypubdantic.models.core.ObjectModel.url" href="#activitypubdantic.models.core.ObjectModel.url">url</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_1x1" href="#activitypubdantic.models.core.ObjectModel.validate_1x1">validate_1x1</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_collections" href="#activitypubdantic.models.core.ObjectModel.validate_collections">validate_collections</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_language_strings" href="#activitypubdantic.models.core.ObjectModel.validate_language_strings">validate_language_strings</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_links_or_images" href="#activitypubdantic.models.core.ObjectModel.validate_links_or_images">validate_links_or_images</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_links_or_objects" href="#activitypubdantic.models.core.ObjectModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_links_or_urls" href="#activitypubdantic.models.core.ObjectModel.validate_links_or_urls">validate_links_or_urls</a></code></li>
-<li><code><a title="activitypubdantic.models.core.ObjectModel.validate_places" href="#activitypubdantic.models.core.ObjectModel.validate_places">validate_places</a></code></li>
 </ul>
 </li>
 <li>
@@ -2792,19 +2131,17 @@ allow <code>self</code> as a field name.</p></div>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionModel.model_fields" href="#activitypubdantic.models.core.OrderedCollectionModel.model_fields">model_fields</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionModel.ordered_items" href="#activitypubdantic.models.core.OrderedCollectionModel.ordered_items">ordered_items</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionModel.type" href="#activitypubdantic.models.core.OrderedCollectionModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.core.OrderedCollectionModel.validate_links_or_objects" href="#activitypubdantic.models.core.OrderedCollectionModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel" href="#activitypubdantic.models.core.OrderedCollectionPageModel">OrderedCollectionPageModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.items" href="#activitypubdantic.models.core.OrderedCollectionPageModel.items">items</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.model_config" href="#activitypubdantic.models.core.OrderedCollectionPageModel.model_config">model_config</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.model_fields" href="#activitypubdantic.models.core.OrderedCollectionPageModel.model_fields">model_fields</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.ordered_items" href="#activitypubdantic.models.core.OrderedCollectionPageModel.ordered_items">ordered_items</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.start_index" href="#activitypubdantic.models.core.OrderedCollectionPageModel.start_index">start_index</a></code></li>
 <li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.type" href="#activitypubdantic.models.core.OrderedCollectionPageModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.core.OrderedCollectionPageModel.validate_links_or_objects" href="#activitypubdantic.models.core.OrderedCollectionPageModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
 </ul>
 </li>
 <li>

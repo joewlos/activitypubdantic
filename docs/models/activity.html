@@ -34,6 +34,7 @@ ACTIVITY PYDANTIC MODELS FOR VALIDATION \n
 Documentation: https://www.w3.org/TR/activitystreams-vocabulary/#activity-types
 &#34;&#34;&#34;
 # Import Pydantic models and types
+from datetime import datetime
 from pydantic import field_validator, model_validator
 from typing import List, Literal, Union
 
@@ -48,8 +49,7 @@ from activitypubdantic.models.core import (
     LinkModel,
     PlaceModel,
     ObjectModel,
-    must_be_links_or_objects,
-    must_be_list,
+    validate_list_links_or_objects,
 )
 
 
@@ -315,25 +315,17 @@ class QuestionModel(IntransitiveActivityModel):
     # Properties
     one_of: List[Union[LinkModel, ObjectModel]] = None
     any_of: List[Union[LinkModel, ObjectModel]] = None
-    closed: bool = None
+    closed: Union[bool, datetime, LinkModel, ObjectModel] = None
     votersCount: int = None  # In Mastodon
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;one_of&#34;,
-        &#34;any_of&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _question_list_of_links_or_objects = field_validator(
+        &#34;one_of&#34;, &#34;any_of&#34;, mode=&#34;before&#34;
+    )(validate_list_links_or_objects)
 
     # Only one of one_of or any_of may be set
     @model_validator(mode=&#34;after&#34;)
-    def validate_one_of_or_any_of(cls, m: &#34;QuestionModel&#34;):
+    def _question_validate_one_of_or_any_of(cls, m: &#34;QuestionModel&#34;):
         any_of = m.any_of
         one_of = m.one_of
         if any_of and one_of:
@@ -1202,25 +1194,17 @@ allow <code>self</code> as a field name.</p></div>
     # Properties
     one_of: List[Union[LinkModel, ObjectModel]] = None
     any_of: List[Union[LinkModel, ObjectModel]] = None
-    closed: bool = None
+    closed: Union[bool, datetime, LinkModel, ObjectModel] = None
     votersCount: int = None  # In Mastodon
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        &#34;one_of&#34;,
-        &#34;any_of&#34;,
-        mode=&#34;before&#34;,
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _question_list_of_links_or_objects = field_validator(
+        &#34;one_of&#34;, &#34;any_of&#34;, mode=&#34;before&#34;
+    )(validate_list_links_or_objects)
 
     # Only one of one_of or any_of may be set
     @model_validator(mode=&#34;after&#34;)
-    def validate_one_of_or_any_of(cls, m: &#34;QuestionModel&#34;):
+    def _question_validate_one_of_or_any_of(cls, m: &#34;QuestionModel&#34;):
         any_of = m.any_of
         one_of = m.one_of
         if any_of and one_of:
@@ -1241,7 +1225,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.activity.QuestionModel.closed"><code class="name">var <span class="ident">closed</span> : bool</code></dt>
+<dt id="activitypubdantic.models.activity.QuestionModel.closed"><code class="name">var <span class="ident">closed</span> : Union[bool, datetime.datetime, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1264,49 +1248,6 @@ allow <code>self</code> as a field name.</p></div>
 <dt id="activitypubdantic.models.activity.QuestionModel.votersCount"><code class="name">var <span class="ident">votersCount</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="activitypubdantic.models.activity.QuestionModel.validate_links_or_objects"><code class="name flex">
-<span>def <span class="ident">validate_links_or_objects</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@field_validator(
-    &#34;one_of&#34;,
-    &#34;any_of&#34;,
-    mode=&#34;before&#34;,
-)
-def validate_links_or_objects(cls, v):
-    v = must_be_list(v)
-    for i, item in enumerate(v):
-        if item:
-            v[i] = must_be_links_or_objects(item)
-    return v</code></pre>
-</details>
-</dd>
-<dt id="activitypubdantic.models.activity.QuestionModel.validate_one_of_or_any_of"><code class="name flex">
-<span>def <span class="ident">validate_one_of_or_any_of</span></span>(<span>m: <a title="activitypubdantic.models.activity.QuestionModel" href="#activitypubdantic.models.activity.QuestionModel">QuestionModel</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@model_validator(mode=&#34;after&#34;)
-def validate_one_of_or_any_of(cls, m: &#34;QuestionModel&#34;):
-    any_of = m.any_of
-    one_of = m.one_of
-    if any_of and one_of:
-        raise ValueError(&#34;Only one of the answer types may be set.&#34;)
-    return m</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -1883,15 +1824,13 @@ allow <code>self</code> as a field name.</p></div>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.models.activity.QuestionModel" href="#activitypubdantic.models.activity.QuestionModel">QuestionModel</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.any_of" href="#activitypubdantic.models.activity.QuestionModel.any_of">any_of</a></code></li>
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.closed" href="#activitypubdantic.models.activity.QuestionModel.closed">closed</a></code></li>
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.model_config" href="#activitypubdantic.models.activity.QuestionModel.model_config">model_config</a></code></li>
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.model_fields" href="#activitypubdantic.models.activity.QuestionModel.model_fields">model_fields</a></code></li>
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.one_of" href="#activitypubdantic.models.activity.QuestionModel.one_of">one_of</a></code></li>
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.type" href="#activitypubdantic.models.activity.QuestionModel.type">type</a></code></li>
-<li><code><a title="activitypubdantic.models.activity.QuestionModel.validate_links_or_objects" href="#activitypubdantic.models.activity.QuestionModel.validate_links_or_objects">validate_links_or_objects</a></code></li>
-<li><code><a title="activitypubdantic.models.activity.QuestionModel.validate_one_of_or_any_of" href="#activitypubdantic.models.activity.QuestionModel.validate_one_of_or_any_of">validate_one_of_or_any_of</a></code></li>
 <li><code><a title="activitypubdantic.models.activity.QuestionModel.votersCount" href="#activitypubdantic.models.activity.QuestionModel.votersCount">votersCount</a></code></li>
 </ul>
 </li>

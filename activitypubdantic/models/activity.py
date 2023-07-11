@@ -4,6 +4,7 @@ ACTIVITY PYDANTIC MODELS FOR VALIDATION \n
 Documentation: https://www.w3.org/TR/activitystreams-vocabulary/#activity-types
 """
 # Import Pydantic models and types
+from datetime import datetime
 from pydantic import field_validator, model_validator
 from typing import List, Literal, Union
 
@@ -18,8 +19,7 @@ from activitypubdantic.models.core import (
     LinkModel,
     PlaceModel,
     ObjectModel,
-    must_be_links_or_objects,
-    must_be_list,
+    validate_list_links_or_objects,
 )
 
 
@@ -285,25 +285,17 @@ class QuestionModel(IntransitiveActivityModel):
     # Properties
     one_of: List[Union[LinkModel, ObjectModel]] = None
     any_of: List[Union[LinkModel, ObjectModel]] = None
-    closed: bool = None
+    closed: Union[bool, datetime, LinkModel, ObjectModel] = None
     votersCount: int = None  # In Mastodon
 
-    # Correct to list of Links or Objects
-    @field_validator(
-        "one_of",
-        "any_of",
-        mode="before",
-    )
-    def validate_links_or_objects(cls, v):
-        v = must_be_list(v)
-        for i, item in enumerate(v):
-            if item:
-                v[i] = must_be_links_or_objects(item)
-        return v
+    # Validation
+    _question_list_of_links_or_objects = field_validator(
+        "one_of", "any_of", mode="before"
+    )(validate_list_links_or_objects)
 
     # Only one of one_of or any_of may be set
     @model_validator(mode="after")
-    def validate_one_of_or_any_of(cls, m: "QuestionModel"):
+    def _question_validate_one_of_or_any_of(cls, m: "QuestionModel"):
         any_of = m.any_of
         one_of = m.one_of
         if any_of and one_of:

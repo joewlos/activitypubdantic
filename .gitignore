@@ -70,3 +70,6 @@ ui/static/static/magnify_preview/static/js/data.js
 
 # Ignore PyTest
 .pytest_cache/
+
+# Scratch file
+scratch.py
