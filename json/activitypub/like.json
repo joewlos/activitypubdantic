@@ -1,18 +1,18 @@
 {
-    "@context": "https://www.w3.org/ns/activitystreams",
-    "type": "Like",
-    "actor": "https://example.net/~mallory",
-    "to": [
-        "https://hatchat.example/sarah/",
-        "https://example.com/peeps/john/"
-    ],
-    "object": {
-        "@context": {
+    "@context": [
+        "https://www.w3.org/ns/activitystreams",
+        {
             "@language": "en"
-        },
-        "id": "https://example.org/~alice/note/23",
-        "type": "Note",
-        "attributedTo": "https://example.org/~alice",
-        "content": "I'm a goat"
-    }
+        }
+    ],
+    "type": "Like",
+    "actor": "https://dustycloud.org/chris/",
+    "name": "Chris liked 'Minimal ActivityPub update client'",
+    "object": "https://rhiaro.co.uk/2016/05/minimal-activitypub",
+    "to": [
+        "https://rhiaro.co.uk/#amy",
+        "https://dustycloud.org/followers",
+        "https://rhiaro.co.uk/followers/"
+    ],
+    "cc": "https://e14n.com/evan"
 }

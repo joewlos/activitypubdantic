@@ -6,7 +6,7 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>activitypubdantic API documentation</title>
 <meta name="description" content="The classes in this package are designed to enable interactions with ActivityPub data.
-To use a class, call get_class() with your input JSON to return …" />
+To make a class instance for your data, call get_class() with …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -24,14 +24,14 @@ To use a class, call get_class() with your input JSON to return …" />
 </header>
 <section id="section-intro">
 <p>The classes in this package are designed to enable interactions with ActivityPub data.
-To use a class, call get_class() with your input JSON to return a class instance. </p>
+To make a class instance for your data, call get_class() with your input JSON as the argument. </p>
 <p>The functions for retrieving Pydantic models are designed to validate class data. </p>
 <p>The Pydantic models may be used independently of the functions and classes to validate data
-in your own custom functions or FastAPI routes. </p>
+in your own custom functions, classes, or FastAPI routes. </p>
 <p>The ActivityPub protocol is cited throughout this documentation and is available here:
 <a href="https://www.w3.org/TR/activitypub/">https://www.w3.org/TR/activitypub/</a> </p>
-<p>The GitHub repo containing this project, which includes licensing information and is open to PRs,
-is available here: <a href="https://github.com/joewlos/activitypubdantic">https://github.com/joewlos/activitypubdantic</a></p>
+<p>The GitHub repo containing this project, which includes examples and licensing information
+and is open to PRs, is available here: <a href="https://github.com/joewlos/activitypubdantic">https://github.com/joewlos/activitypubdantic</a></p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -39,14 +39,14 @@ is available here: <a href="https://github.com/joewlos/activitypubdantic">https:
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
 The classes in this package are designed to enable interactions with ActivityPub data.
-To use a class, call get_class() with your input JSON to return a class instance. \n
+To make a class instance for your data, call get_class() with your input JSON as the argument. \n
 The functions for retrieving Pydantic models are designed to validate class data. \n
 The Pydantic models may be used independently of the functions and classes to validate data 
-in your own custom functions or FastAPI routes. \n
+in your own custom functions, classes, or FastAPI routes. \n
 The ActivityPub protocol is cited throughout this documentation and is available here: 
 https://www.w3.org/TR/activitypub/ \n
-The GitHub repo containing this project, which includes licensing information and is open to PRs,
-is available here: https://github.com/joewlos/activitypubdantic
+The GitHub repo containing this project, which includes examples and licensing information
+and is open to PRs, is available here: https://github.com/joewlos/activitypubdantic
 &#34;&#34;&#34;
 from activitypubdantic.get_class import get_class
 from activitypubdantic.get_model import get_model, get_model_data, get_model_json</code></pre>

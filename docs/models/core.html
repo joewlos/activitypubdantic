@@ -397,7 +397,7 @@ class CoreModel(BaseModel):
     )
 
     # Context
-    context: Union[HttpUrl, List] = _DEFAULT_CONTEXT
+    context: Union[HttpUrl, List, dict] = _DEFAULT_CONTEXT
 
 
 &#34;&#34;&#34;
@@ -520,6 +520,7 @@ class ObjectModel(CoreModel):
         &#34;in_reply_to&#34;,
         &#34;preview&#34;,
         &#34;tag&#34;,
+        &#34;to&#34;,
         &#34;bto&#34;,
         &#34;cc&#34;,
         &#34;bcc&#34;,
@@ -1200,7 +1201,7 @@ allow <code>self</code> as a field name.</p></div>
     )
 
     # Context
-    context: Union[HttpUrl, List] = _DEFAULT_CONTEXT</code></pre>
+    context: Union[HttpUrl, List, dict] = _DEFAULT_CONTEXT</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1213,7 +1214,7 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.core.CoreModel.context"><code class="name">var <span class="ident">context</span> : Union[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)], List[~T]]</code></dt>
+<dt id="activitypubdantic.models.core.CoreModel.context"><code class="name">var <span class="ident">context</span> : Union[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)], List[~T], dict]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1586,6 +1587,7 @@ allow <code>self</code> as a field name.</p></div>
         &#34;in_reply_to&#34;,
         &#34;preview&#34;,
         &#34;tag&#34;,
+        &#34;to&#34;,
         &#34;bto&#34;,
         &#34;cc&#34;,
         &#34;bcc&#34;,
