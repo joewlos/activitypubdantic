@@ -49,7 +49,7 @@ output_json = output_class.json()
 print(output_json)  # See JSON below
 ```
 
-`get_class()` reads the `example_json` and uses its type to select the applicable Pydantic model. It then uses Pydantic validators for each field to assert their validity and restructure them.
+`get_class()` reads the `example_json` and uses its type to select the applicable Pydantic model. It then uses Pydantic validators for each field to assert they comply with the protocol and then restructure them.
 
 The `output_json` is longer and, at first glance, more complex. But because it contains types for each item in its fields and it standardizes the structures of similar fields – like `to` and `cc` – it is more descriptive and easier to consistently manipulate.
 
@@ -134,9 +134,9 @@ A verbosity flag shortens the output, retaining consistency but eliminating unne
 
 ### Validating FastAPI Request Bodies
 
-[FastAPI](https://fastapi.tiangolo.com/) uses Pydantic models to validate [request bodies](https://fastapi.tiangolo.com/tutorial/body/). After importing **ActivityPubdantic** Pydantic models directly, developers can automatically validate requests and then use the `get_class_from_model()` function to smoothly interact with the ActivityPub JSON.
+[FastAPI](https://fastapi.tiangolo.com/) uses Pydantic models to validate [request bodies](https://fastapi.tiangolo.com/tutorial/body/). After importing **ActivityPubdantic** models directly, developers can automatically validate requests and then use the `get_class_from_model()` function to smoothly interact with the ActivityPub JSON.
 
-In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the body is validated by FastAPI, loaded into a **ActivityPubdantic** class to produce clean JSON, and used to specify a location in the header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
+In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the body is validated by FastAPI, loaded into a **ActivityPubdantic** class to produce clean JSON, and used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
 
 ```python
 import activitypubdantic as ap
