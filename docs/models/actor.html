@@ -75,6 +75,8 @@ def validate_list_collections(v):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_collections(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -99,12 +101,12 @@ class EndpointsModel(BaseModel):
     model_config = ConfigDict(alias_generator=_must_be_camel, populate_by_name=True)
 
     # Properties
-    proxy_url: HttpUrl = None
-    oauth_authorization_endpoint: HttpUrl = None
-    oauth_token_endpoint: HttpUrl = None
-    provide_client_key: HttpUrl = None
-    sign_client_key: HttpUrl = None
-    shared_inbox: HttpUrl = None
+    proxy_url: Union[None, HttpUrl] = None
+    oauth_authorization_endpoint: Union[HttpUrl, None] = None
+    oauth_token_endpoint: Union[HttpUrl, None] = None
+    provide_client_key: Union[HttpUrl, None] = None
+    sign_client_key: Union[HttpUrl, None] = None
+    shared_inbox: Union[HttpUrl, None] = None
 
 
 &#34;&#34;&#34;
@@ -123,13 +125,13 @@ class ActorModel(ObjectModel):
 
     # Properties
     preferred_username: str = None
-    inbox: ObjectModel = None
-    outbox: ObjectModel = None
-    following: ObjectModel = None
-    followers: ObjectModel = None
-    liked: ObjectModel = None
-    streams: List[ObjectModel] = None
-    endpoints: Union[HttpUrl, EndpointsModel] = None
+    inbox: ObjectModel = None  # Required
+    outbox: ObjectModel = None  # Required
+    following: Union[None, ObjectModel] = None
+    followers: Union[None, ObjectModel] = None
+    liked: Union[None, ObjectModel] = None
+    streams: List[Union[None, ObjectModel]] = None
+    endpoints: Union[None, HttpUrl, EndpointsModel] = None
 
     # Validation
     _actor_collections = field_validator(
@@ -229,6 +231,8 @@ class ServiceModel(ActorModel):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_collections(item)
+        else:
+            v.pop(i)
     return v</code></pre>
 </details>
 </dd>
@@ -276,13 +280,13 @@ allow <code>self</code> as a field name.</p></div>
 
     # Properties
     preferred_username: str = None
-    inbox: ObjectModel = None
-    outbox: ObjectModel = None
-    following: ObjectModel = None
-    followers: ObjectModel = None
-    liked: ObjectModel = None
-    streams: List[ObjectModel] = None
-    endpoints: Union[HttpUrl, EndpointsModel] = None
+    inbox: ObjectModel = None  # Required
+    outbox: ObjectModel = None  # Required
+    following: Union[None, ObjectModel] = None
+    followers: Union[None, ObjectModel] = None
+    liked: Union[None, ObjectModel] = None
+    streams: List[Union[None, ObjectModel]] = None
+    endpoints: Union[None, HttpUrl, EndpointsModel] = None
 
     # Validation
     _actor_collections = field_validator(
@@ -314,15 +318,15 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.actor.ActorModel.endpoints"><code class="name">var <span class="ident">endpoints</span> : Union[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)], <a title="activitypubdantic.models.actor.EndpointsModel" href="#activitypubdantic.models.actor.EndpointsModel">EndpointsModel</a>]</code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.endpoints"><code class="name">var <span class="ident">endpoints</span> : Union[None, typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)], <a title="activitypubdantic.models.actor.EndpointsModel" href="#activitypubdantic.models.actor.EndpointsModel">EndpointsModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.ActorModel.followers"><code class="name">var <span class="ident">followers</span> : <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.followers"><code class="name">var <span class="ident">followers</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.ActorModel.following"><code class="name">var <span class="ident">following</span> : <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.following"><code class="name">var <span class="ident">following</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -330,7 +334,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.ActorModel.liked"><code class="name">var <span class="ident">liked</span> : <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.liked"><code class="name">var <span class="ident">liked</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -350,7 +354,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.ActorModel.streams"><code class="name">var <span class="ident">streams</span> : List[<a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]</code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.streams"><code class="name">var <span class="ident">streams</span> : List[Optional[None]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -432,12 +436,12 @@ allow <code>self</code> as a field name.</p></div>
     model_config = ConfigDict(alias_generator=_must_be_camel, populate_by_name=True)
 
     # Properties
-    proxy_url: HttpUrl = None
-    oauth_authorization_endpoint: HttpUrl = None
-    oauth_token_endpoint: HttpUrl = None
-    provide_client_key: HttpUrl = None
-    sign_client_key: HttpUrl = None
-    shared_inbox: HttpUrl = None</code></pre>
+    proxy_url: Union[None, HttpUrl] = None
+    oauth_authorization_endpoint: Union[HttpUrl, None] = None
+    oauth_token_endpoint: Union[HttpUrl, None] = None
+    provide_client_key: Union[HttpUrl, None] = None
+    sign_client_key: Union[HttpUrl, None] = None
+    shared_inbox: Union[HttpUrl, None] = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -453,27 +457,27 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.EndpointsModel.oauth_authorization_endpoint"><code class="name">var <span class="ident">oauth_authorization_endpoint</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.actor.EndpointsModel.oauth_authorization_endpoint"><code class="name">var <span class="ident">oauth_authorization_endpoint</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.EndpointsModel.oauth_token_endpoint"><code class="name">var <span class="ident">oauth_token_endpoint</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.actor.EndpointsModel.oauth_token_endpoint"><code class="name">var <span class="ident">oauth_token_endpoint</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.EndpointsModel.provide_client_key"><code class="name">var <span class="ident">provide_client_key</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.actor.EndpointsModel.provide_client_key"><code class="name">var <span class="ident">provide_client_key</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.EndpointsModel.proxy_url"><code class="name">var <span class="ident">proxy_url</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.actor.EndpointsModel.proxy_url"><code class="name">var <span class="ident">proxy_url</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.EndpointsModel.shared_inbox"><code class="name">var <span class="ident">shared_inbox</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.actor.EndpointsModel.shared_inbox"><code class="name">var <span class="ident">shared_inbox</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.EndpointsModel.sign_client_key"><code class="name">var <span class="ident">sign_client_key</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.actor.EndpointsModel.sign_client_key"><code class="name">var <span class="ident">sign_client_key</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>

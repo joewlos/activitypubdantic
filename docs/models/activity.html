@@ -313,10 +313,10 @@ class QuestionModel(IntransitiveActivityModel):
     type: Literal[&#34;Question&#34;] = &#34;Question&#34;
 
     # Properties
-    one_of: List[Union[LinkModel, ObjectModel]] = None
-    any_of: List[Union[LinkModel, ObjectModel]] = None
-    closed: Union[bool, datetime, LinkModel, ObjectModel] = None
-    votersCount: int = None  # In Mastodon
+    one_of: List[Union[None, LinkModel, ObjectModel]] = None
+    any_of: List[Union[None, LinkModel, ObjectModel]] = None
+    closed: Union[None, bool, datetime, LinkModel, ObjectModel] = None
+    votersCount: Union[None, int] = None  # In Mastodon
 
     # Validation
     _question_list_of_links_or_objects = field_validator(
@@ -1192,10 +1192,10 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;Question&#34;] = &#34;Question&#34;
 
     # Properties
-    one_of: List[Union[LinkModel, ObjectModel]] = None
-    any_of: List[Union[LinkModel, ObjectModel]] = None
-    closed: Union[bool, datetime, LinkModel, ObjectModel] = None
-    votersCount: int = None  # In Mastodon
+    one_of: List[Union[None, LinkModel, ObjectModel]] = None
+    any_of: List[Union[None, LinkModel, ObjectModel]] = None
+    closed: Union[None, bool, datetime, LinkModel, ObjectModel] = None
+    votersCount: Union[None, int] = None  # In Mastodon
 
     # Validation
     _question_list_of_links_or_objects = field_validator(
@@ -1221,11 +1221,11 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.activity.QuestionModel.any_of"><code class="name">var <span class="ident">any_of</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.activity.QuestionModel.any_of"><code class="name">var <span class="ident">any_of</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.activity.QuestionModel.closed"><code class="name">var <span class="ident">closed</span> : Union[bool, datetime.datetime, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]</code></dt>
+<dt id="activitypubdantic.models.activity.QuestionModel.closed"><code class="name">var <span class="ident">closed</span> : Union[None, bool, datetime.datetime, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1237,7 +1237,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.activity.QuestionModel.one_of"><code class="name">var <span class="ident">one_of</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.activity.QuestionModel.one_of"><code class="name">var <span class="ident">one_of</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1245,7 +1245,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.activity.QuestionModel.votersCount"><code class="name">var <span class="ident">votersCount</span> : int</code></dt>
+<dt id="activitypubdantic.models.activity.QuestionModel.votersCount"><code class="name">var <span class="ident">votersCount</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>

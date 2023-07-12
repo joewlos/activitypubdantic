@@ -24,9 +24,9 @@ However, that flexibility presents challenges for assessing data validity and si
 
 The following examples present simple use cases and code snippets for **ActivityPubdantic**. For a more thorough listing of **ActivityPubdantic's** classes, functions, and models, check out its [documentation](https://www.joewlos.com/activitypubdantic/).
 
-### Validating and Parsing Activities
+### Validating and Parsing Activities, Collections, Links, and Objects
 
-`Activities` are core concepts around which ActivityPub and ActivityStreams are both built. By reducing their complexity and standardizing their representation, **ActivityPubdantic** helps resolve potential pain points for developers.
+`Activities`, `Collections`, `Links`, and `Objects` are the core concepts around which ActivityPub and ActivityStreams are both built. By reducing their complexity and standardizing their representation, **ActivityPubdantic** helps resolve potential pain points for developers.
 
 ActivityPub's protocol includes an [example](https://www.w3.org/TR/activitypub/#client-to-server-interactions) of a `Like` activity. The example's `to` field is a list, while its `cc` field is a string. Both formats are valid, but they require slightly different handling in subsequent lines of code. To resolve that difference, after validating this JSON, **ActivityPubdantic** rewrites it, so that those fields are always presented as lists of dictionaries.
 
@@ -48,6 +48,8 @@ output_class = ap.get_class(example_json)  # Class is determined by "type" field
 output_json = output_class.json()
 print(output_json)  # See JSON below
 ```
+
+`get_class()` reads the ActivityPub JSON and uses its type to select the applicable Pydantic model. It then uses Pydantic validators for each field to assert their validity and restructure them.
 
 The `output_json` is longer and, at first glance, more complex. But because it contains types for each item in its fields and it standardizes the structures of similar fields – like `to` and `cc` – it is more descriptive and easier to consistently manipulate.
 
@@ -107,7 +109,7 @@ short_output_json = output_class.json(verbose=False)
 print(short_output_json)  # See JSON below
 ```
 
-A verbosity flag shortens the output, retaining consistency but eliminating potentially unneeded data for your implementation.
+A verbosity flag shortens the output, retaining consistency but eliminating potentially unneeded data for simpler implementations.
 
 ```json
 {
@@ -129,5 +131,3 @@ A verbosity flag shortens the output, retaining consistency but eliminating pote
   "object": "https://rhiaro.co.uk/2016/05/minimal-activitypub"
 }
 ```
-
-In **ActivityPubdantic**, all `Activities` are identified by their type, which must be present for the `get_class()` function to map to the correct Pydantic model to load.

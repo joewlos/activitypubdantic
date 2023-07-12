@@ -41,6 +41,20 @@ from typing import Union
 
 
 &#34;&#34;&#34;
+DEFAULTS
+&#34;&#34;&#34;
+
+
+_DEFAULT_LANGUAGES = [&#34;en&#34;, &#34;en-US&#34;]
+_DEFAULT_MAP_FIELDS = {
+    &#34;content_map&#34;: &#34;content&#34;,
+    &#34;summary_map&#34;: &#34;summary&#34;,
+    &#34;name_map&#34;: &#34;name&#34;,
+}
+_DEFAULT_PROTECTED_FIELDS = [&#34;data&#34;, &#34;model&#34;, &#34;input_json&#34;, &#34;_data&#34;, &#34;json&#34;]
+
+
+&#34;&#34;&#34;
 CLASSES
 &#34;&#34;&#34;
 
@@ -56,9 +70,26 @@ class Base:
             ActivityModel, ActorModel, CollectionModel, LinkModel, ObjectModel
         ],
         input_json: Union[dict, list],
+        default_languages: list = _DEFAULT_LANGUAGES,
     ):
         self.model = model
         self.input_json = input_json
+        self._data = self.data(
+            exclude_none=False, by_alias=False
+        )  # Use underscore to avoid conflict with data() function
+
+        # For each key,value pair in the input_json, set the class attribute
+        for k, v in self._data.items():
+            if k not in _DEFAULT_PROTECTED_FIELDS:
+                setattr(self, k, v)
+
+        # For mapped fields, update their corresponding value with the default language
+        for k, v in _DEFAULT_MAP_FIELDS.items():
+            if k in self._data:
+                for language in default_languages:
+                    if self._data[k] and language in self._data[k]:
+                        setattr(self, v, self._data[k][language])
+                        break
 
     def data(
         self,
@@ -67,7 +98,7 @@ class Base:
         verbose: bool = True,
     ):
         &#34;&#34;&#34;
-        Return the class input_json as a Python dictionary or list.
+        Return the class input_json as a Python dictionary or list with settings.
         &#34;&#34;&#34;
         return get_model_data(
             self.input_json,
@@ -84,7 +115,7 @@ class Base:
         indent: int = 2,
     ):
         &#34;&#34;&#34;
-        Return the class input_json as a JSON string.
+        Return the class input_json as a JSON string with settings.
         &#34;&#34;&#34;
         return get_model_json(
             self.input_json,
@@ -254,7 +285,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 <dl>
 <dt id="activitypubdantic.get_class.Activity"><code class="flex name class">
 <span>class <span class="ident">Activity</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Activity data and associated functions.</p></div>
@@ -283,7 +314,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 </dd>
 <dt id="activitypubdantic.get_class.Actor"><code class="flex name class">
 <span>class <span class="ident">Actor</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Actor data and associated functions.</p></div>
@@ -312,7 +343,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 </dd>
 <dt id="activitypubdantic.get_class.Base"><code class="flex name class">
 <span>class <span class="ident">Base</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base extends default functions to all other classes.</p></div>
@@ -331,9 +362,26 @@ This function assumes any input string is JSON and parses it.</p></div>
             ActivityModel, ActorModel, CollectionModel, LinkModel, ObjectModel
         ],
         input_json: Union[dict, list],
+        default_languages: list = _DEFAULT_LANGUAGES,
     ):
         self.model = model
         self.input_json = input_json
+        self._data = self.data(
+            exclude_none=False, by_alias=False
+        )  # Use underscore to avoid conflict with data() function
+
+        # For each key,value pair in the input_json, set the class attribute
+        for k, v in self._data.items():
+            if k not in _DEFAULT_PROTECTED_FIELDS:
+                setattr(self, k, v)
+
+        # For mapped fields, update their corresponding value with the default language
+        for k, v in _DEFAULT_MAP_FIELDS.items():
+            if k in self._data:
+                for language in default_languages:
+                    if self._data[k] and language in self._data[k]:
+                        setattr(self, v, self._data[k][language])
+                        break
 
     def data(
         self,
@@ -342,7 +390,7 @@ This function assumes any input string is JSON and parses it.</p></div>
         verbose: bool = True,
     ):
         &#34;&#34;&#34;
-        Return the class input_json as a Python dictionary or list.
+        Return the class input_json as a Python dictionary or list with settings.
         &#34;&#34;&#34;
         return get_model_data(
             self.input_json,
@@ -359,7 +407,7 @@ This function assumes any input string is JSON and parses it.</p></div>
         indent: int = 2,
     ):
         &#34;&#34;&#34;
-        Return the class input_json as a JSON string.
+        Return the class input_json as a JSON string with settings.
         &#34;&#34;&#34;
         return get_model_json(
             self.input_json,
@@ -383,7 +431,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 <span>def <span class="ident">data</span></span>(<span>self, by_alias: bool = True, exclude_none: bool = True, verbose: bool = True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the class input_json as a Python dictionary or list.</p></div>
+<div class="desc"><p>Return the class input_json as a Python dictionary or list with settings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -395,7 +443,7 @@ This function assumes any input string is JSON and parses it.</p></div>
     verbose: bool = True,
 ):
     &#34;&#34;&#34;
-    Return the class input_json as a Python dictionary or list.
+    Return the class input_json as a Python dictionary or list with settings.
     &#34;&#34;&#34;
     return get_model_data(
         self.input_json,
@@ -409,7 +457,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 <span>def <span class="ident">json</span></span>(<span>self, by_alias: bool = True, exclude_none: bool = True, verbose: bool = True, indent: int = 2)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the class input_json as a JSON string.</p></div>
+<div class="desc"><p>Return the class input_json as a JSON string with settings.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -422,7 +470,7 @@ This function assumes any input string is JSON and parses it.</p></div>
     indent: int = 2,
 ):
     &#34;&#34;&#34;
-    Return the class input_json as a JSON string.
+    Return the class input_json as a JSON string with settings.
     &#34;&#34;&#34;
     return get_model_json(
         self.input_json,
@@ -437,7 +485,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 </dd>
 <dt id="activitypubdantic.get_class.Collection"><code class="flex name class">
 <span>class <span class="ident">Collection</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Collection data and associated functions.</p></div>
@@ -466,7 +514,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 </dd>
 <dt id="activitypubdantic.get_class.Link"><code class="flex name class">
 <span>class <span class="ident">Link</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Link data and associated functions.</p></div>
@@ -495,7 +543,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 </dd>
 <dt id="activitypubdantic.get_class.Object"><code class="flex name class">
 <span>class <span class="ident">Object</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Object data and associated functions.</p></div>

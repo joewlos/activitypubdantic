@@ -47,6 +47,7 @@ from activitypubdantic.models.core import (
     ObjectModel,
     PlaceModel,
     validate_list_links_or_objects,
+    validate_list_objects,
 )
 
 &#34;&#34;&#34;
@@ -63,14 +64,17 @@ class RelationshipModel(ObjectModel):
     type: Literal[&#34;Relationship&#34;] = &#34;Relationship&#34;
 
     # Properties
-    subject: List[Union[LinkModel, ObjectModel]] = None
-    object: List[Union[LinkModel, ObjectModel]] = None
-    relationship: List[ObjectModel] = None
+    subject: List[Union[None, LinkModel, ObjectModel]] = None
+    object: List[Union[None, LinkModel, ObjectModel]] = None
+    relationship: List[Union[None, ObjectModel]] = None
 
     # Validators
     _relationship_list_links_or_objects = field_validator(
         &#34;subject&#34;, &#34;object&#34;, mode=&#34;before&#34;
     )(validate_list_links_or_objects)
+    _relationship_list_objects = field_validator(&#34;relationship&#34;, mode=&#34;before&#34;)(
+        validate_list_objects
+    )
 
 
 class ArticleModel(ObjectModel):
@@ -137,7 +141,7 @@ class ProfileModel(ObjectModel):
     type: Literal[&#34;Profile&#34;] = &#34;Profile&#34;
 
     # Properties
-    describes: ObjectModel = None
+    describes: Union[None, ObjectModel] = None
 
 
 class TombstoneModel(ObjectModel):
@@ -149,8 +153,8 @@ class TombstoneModel(ObjectModel):
     type: Literal[&#34;Tombstone&#34;] = &#34;Tombstone&#34;
 
     # Properties
-    former_type: ObjectModel = None
-    deleted: datetime = None</code></pre>
+    former_type: Union[None, ObjectModel] = None
+    deleted: Union[None, datetime] = None</code></pre>
 </details>
 </section>
 <section>
@@ -409,7 +413,7 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;Profile&#34;] = &#34;Profile&#34;
 
     # Properties
-    describes: ObjectModel = None</code></pre>
+    describes: Union[None, ObjectModel] = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -419,7 +423,7 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.object.ProfileModel.describes"><code class="name">var <span class="ident">describes</span> : <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.object.ProfileModel.describes"><code class="name">var <span class="ident">describes</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -460,14 +464,17 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;Relationship&#34;] = &#34;Relationship&#34;
 
     # Properties
-    subject: List[Union[LinkModel, ObjectModel]] = None
-    object: List[Union[LinkModel, ObjectModel]] = None
-    relationship: List[ObjectModel] = None
+    subject: List[Union[None, LinkModel, ObjectModel]] = None
+    object: List[Union[None, LinkModel, ObjectModel]] = None
+    relationship: List[Union[None, ObjectModel]] = None
 
     # Validators
     _relationship_list_links_or_objects = field_validator(
         &#34;subject&#34;, &#34;object&#34;, mode=&#34;before&#34;
-    )(validate_list_links_or_objects)</code></pre>
+    )(validate_list_links_or_objects)
+    _relationship_list_objects = field_validator(&#34;relationship&#34;, mode=&#34;before&#34;)(
+        validate_list_objects
+    )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -485,15 +492,15 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.RelationshipModel.object"><code class="name">var <span class="ident">object</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.object.RelationshipModel.object"><code class="name">var <span class="ident">object</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.RelationshipModel.relationship"><code class="name">var <span class="ident">relationship</span> : List[<a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]</code></dt>
+<dt id="activitypubdantic.models.object.RelationshipModel.relationship"><code class="name">var <span class="ident">relationship</span> : List[Optional[None]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.RelationshipModel.subject"><code class="name">var <span class="ident">subject</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.object.RelationshipModel.subject"><code class="name">var <span class="ident">subject</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -526,8 +533,8 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;Tombstone&#34;] = &#34;Tombstone&#34;
 
     # Properties
-    former_type: ObjectModel = None
-    deleted: datetime = None</code></pre>
+    former_type: Union[None, ObjectModel] = None
+    deleted: Union[None, datetime] = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -537,11 +544,11 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.object.TombstoneModel.deleted"><code class="name">var <span class="ident">deleted</span> : datetime.datetime</code></dt>
+<dt id="activitypubdantic.models.object.TombstoneModel.deleted"><code class="name">var <span class="ident">deleted</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.TombstoneModel.former_type"><code class="name">var <span class="ident">former_type</span> : <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.object.TombstoneModel.former_type"><code class="name">var <span class="ident">former_type</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>

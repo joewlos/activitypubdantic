@@ -98,7 +98,7 @@ def _must_be_language_keys(v):
 # Sometimes media must be of the image mime type
 def _must_be_image_types(v):
     if v is not None:
-        if &#34;media_type&#34; in v and v.media_type not in image_mime_types:
+        if &#34;media_type&#34; in v and v[&#34;media_type&#34;] not in image_mime_types:
             raise ValueError(f&#34;Media type {v.media_type} is not a defined image type.&#34;)
     return v
 
@@ -306,6 +306,8 @@ def validate_list_links_or_objects(v):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_links_or_objects(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -320,6 +322,8 @@ def validate_list_no_spaces_or_commas(v):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_no_spaces_or_commas(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -342,6 +346,8 @@ def validate_list_links_or_images(v):
         if item:
             v[i] = _must_be_links_or_images(item)
             _must_be_image_types(v[i])
+        else:
+            v.pop(i)
     return v
 
 
@@ -360,12 +366,25 @@ def validate_objects(v):
     return _must_be_objects(v)
 
 
+# Validate list of Objects
+def validate_list_objects(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_objects(item)
+        else:
+            v.pop(i)
+    return v
+
+
 # Validate list of Links or HttpUrls
 def validate_list_links_or_urls(v):
     v = _must_be_list(v)
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_links_or_urls(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -413,20 +432,20 @@ class LinkModel(CoreModel):
     # Type does not need to be literal for propogation
     type: str = &#34;Link&#34;
 
-    # Required properties
+    # Required property, cannot be null (otherwise, what&#39;s the point of a Link?)
     href: HttpUrl
 
     # Properties
-    rel: List[str] = None
-    media_type: mime_types = None
-    name: str = None
-    name_map: dict = (
-        None  # Dictionary of language keys and name values, validated below
-    )
-    hreflang: language_types = _DEFAULT_LANGUAGE
-    height: int = Field(None, ge=0)
-    width: int = Field(None, ge=0)
-    preview: List[Union[LinkModel, ObjectModel]] = None
+    rel: List[Union[str, None]] = None
+    media_type: Union[None, mime_types] = None
+    name: Union[None, str] = None
+    name_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and name values, validated below
+    hreflang: Union[None, language_types] = _DEFAULT_LANGUAGE
+    height: Union[None, int] = Field(None, ge=0)
+    width: Union[None, int] = Field(None, ge=0)
+    preview: List[Union[None, LinkModel, ObjectModel]] = None
 
     # Validation
     _link_language_strings = field_validator(&#34;name_map&#34;)(validate_language_keys)
@@ -460,45 +479,49 @@ class ObjectModel(CoreModel):
     type: str = &#34;Object&#34;
 
     # All objects distributed by the ActivityPub protocol MUST have unique global identifiers.
-    # Unless they are intentionally transient.
-    # (Such as some kinds of chat messages or game notifications).
-    id: HttpUrl = None
+    # Unless they are intentionally transient, such as chat messages or game notifications.
+    # For that reason, IDs may be either a valid URL or None. They are not technically required.
+    id: Union[None, HttpUrl] = None
 
     # Properties
-    attachment: List[Union[LinkModel, ObjectModel]] = None
-    attributed_to: List[Union[LinkModel, ObjectModel]] = None
-    audience: List[Union[LinkModel, ObjectModel]] = None
-    content: str = None
-    content_map: dict = None  # Dictionary of language keys and content values
-    name: str = None
-    name_map: dict = None  # Dictionary of language keys and name values
-    end_time: datetime = None
-    generator: List[Union[LinkModel, ObjectModel]] = None
-    icon: List[Union[LinkModel, ImageModel]] = None
-    image: List[Union[LinkModel, ImageModel]] = None
-    in_reply_to: List[Union[LinkModel, ObjectModel]] = None
-    location: PlaceModel = None
-    preview: List[Union[LinkModel, ObjectModel]] = None
-    published: datetime = None
-    replies: ObjectModel = (
-        None  # For performance, use Object, but validate as Collection
-    )
-    start_time: datetime = None
-    summary: str = None
-    summary_map: dict = None  # Dictionary of language keys and summary values
-    tag: List[Union[LinkModel, ObjectModel]] = None
-    updated: datetime = None
-    url: List[Union[HttpUrl, LinkModel]] = None
-    to: List[Union[LinkModel, ObjectModel]] = None
-    bto: List[Union[LinkModel, ObjectModel]] = None
-    cc: List[Union[LinkModel, ObjectModel]] = None
-    bcc: List[Union[LinkModel, ObjectModel]] = None
-    media_type: mime_types = None
-    duration: str = None  # TODO: Validate the duration string.
+    attachment: List[Union[None, LinkModel, ObjectModel]] = None
+    attributed_to: List[Union[None, LinkModel, ObjectModel]] = None
+    audience: List[Union[None, LinkModel, ObjectModel]] = None
+    content: Union[None, str] = None
+    content_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and content values
+    name: Union[None, str] = None
+    name_map: Union[None, dict] = None  # Dictionary of language keys and name values
+    end_time: Union[None, datetime] = None
+    generator: List[Union[None, LinkModel, ObjectModel]] = None
+    icon: List[Union[None, LinkModel, ImageModel]] = None
+    image: List[Union[None, LinkModel, ImageModel]] = None
+    in_reply_to: List[Union[None, LinkModel, ObjectModel]] = None
+    location: Union[None, PlaceModel] = None
+    preview: List[Union[None, LinkModel, ObjectModel]] = None
+    published: Union[None, datetime] = None
+    replies: Union[
+        None, ObjectModel
+    ] = None  # For performance, use Object, but validate as Collection
+    start_time: Union[None, datetime] = None
+    summary: Union[None, str] = None
+    summary_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and summary values
+    tag: List[Union[None, LinkModel, ObjectModel]] = None
+    updated: Union[None, datetime] = None
+    url: List[Union[None, HttpUrl, LinkModel]] = None
+    to: List[Union[None, LinkModel, ObjectModel]] = None
+    bto: List[Union[None, LinkModel, ObjectModel]] = None
+    cc: List[Union[None, LinkModel, ObjectModel]] = None
+    bcc: List[Union[None, LinkModel, ObjectModel]] = None
+    media_type: Union[None, mime_types] = None
+    duration: Union[None, str] = None  # TODO: Validate the duration string.
 
     # Necessary for ActivityPub but not ActivityStreams
     # Documentation: https://www.w3.org/TR/activitypub/#source-property
-    source: ObjectModel = None
+    source: Union[None, ObjectModel] = None
 
     # Validation
     _object_language_strings = field_validator(
@@ -525,7 +548,6 @@ class ObjectModel(CoreModel):
         &#34;cc&#34;,
         &#34;bcc&#34;,
         mode=&#34;before&#34;,
-        check_fields=False,
     )(validate_list_links_or_objects)
     _object_list_links_or_urls = field_validator(&#34;url&#34;, mode=&#34;before&#34;)(
         validate_list_links_or_urls
@@ -569,12 +591,12 @@ class PlaceModel(ObjectModel):
     type: Literal[&#34;Place&#34;] = &#34;Place&#34;
 
     # Properties
-    accuracy: float = None
-    altitude: float = None
-    longitude: float = None
-    latitude: float = None
-    radius: float = None
-    units: str = None
+    accuracy: Union[None, float] = None
+    altitude: Union[None, float] = None
+    longitude: Union[None, float] = None
+    latitude: Union[None, float] = None
+    radius: Union[None, float] = None
+    units: Union[None, str] = None
 
 
 &#34;&#34;&#34;
@@ -591,11 +613,11 @@ class CollectionModel(ObjectModel):
     type: str = &#34;Collection&#34;
 
     # Collection properties
-    total_items: int = Field(None, ge=0)
-    current: Union[CollectionPageModel, LinkModel] = None
-    first: Union[CollectionPageModel, LinkModel] = None
-    last: Union[CollectionPageModel, LinkModel] = None
-    items: List[Union[LinkModel, ObjectModel]] = None
+    total_items: Union[None, int] = Field(None, ge=0)
+    current: Union[None, CollectionPageModel, LinkModel] = None
+    first: Union[None, CollectionPageModel, LinkModel] = None
+    last: Union[None, CollectionPageModel, LinkModel] = None
+    items: List[Union[None, LinkModel, ObjectModel]] = None  # May be an empty list
 
     # Validation
     _collection_list_links_or_objects = field_validator(&#34;items&#34;, mode=&#34;before&#34;)(
@@ -619,7 +641,9 @@ class OrderedCollectionModel(CollectionModel):
 
     # Properties
     items: None = None  # No items, only orderedItems
-    ordered_items: List[Union[LinkModel, ObjectModel]] = None
+    ordered_items: List[
+        Union[None, LinkModel, ObjectModel]
+    ] = None  # May be an empty list
 
     # Validation
     _orderedcollection_list_links_or_objects = field_validator(
@@ -636,9 +660,9 @@ class CollectionPageModel(CollectionModel):
     type: str = &#34;CollectionPage&#34;
 
     # Properties
-    part_of: Union[LinkModel, CollectionModel] = None
-    next: Union[LinkModel, CollectionPageModel] = None
-    prev: Union[LinkModel, CollectionPageModel] = None
+    part_of: Union[None, LinkModel, CollectionModel] = None
+    next: Union[None, LinkModel, CollectionPageModel] = None  # May not be a next page
+    prev: Union[None, LinkModel, CollectionPageModel] = None  # May not be a prev page
 
     # Validation
     _collectionpage_links_or_collections = field_validator(&#34;part_of&#34;, mode=&#34;before&#34;)(
@@ -660,9 +684,11 @@ class OrderedCollectionPageModel(CollectionPageModel):
     type: Literal[&#34;OrderedCollectionPage&#34;] = &#34;OrderedCollectionPage&#34;
 
     # Properties
-    start_index: int = Field(None, ge=0)
+    start_index: Union[None, int] = Field(None, ge=0)
     items: None = None  # No items, only orderedItems
-    ordered_items: List[Union[LinkModel, ObjectModel]] = None
+    ordered_items: List[
+        Union[None, LinkModel, ObjectModel]
+    ] = None  # May be an empty list
 
     # Validation
     _orderedcollectionpage_list_links_or_objects = field_validator(
@@ -685,12 +711,12 @@ class ActivityModel(ObjectModel):
     type: str = &#34;Activity&#34;
 
     # Properties
-    actor: List[Union[LinkModel, ObjectModel]] = None
-    object: ObjectModel = None
-    target: List[Union[LinkModel, ObjectModel]] = None
-    result: List[Union[LinkModel, ObjectModel]] = None
-    origin: List[Union[LinkModel, ObjectModel]] = None
-    instrument: List[Union[LinkModel, ObjectModel]] = None
+    actor: List[Union[None, LinkModel, ObjectModel]] = None
+    object: Union[None, ObjectModel] = None
+    target: List[Union[None, LinkModel, ObjectModel]] = None
+    result: List[Union[None, LinkModel, ObjectModel]] = None
+    origin: List[Union[None, LinkModel, ObjectModel]] = None
+    instrument: List[Union[None, LinkModel, ObjectModel]] = None
 
     # Validation
     _activity_objects = field_validator(&#34;object&#34;, mode=&#34;before&#34;)(validate_objects)
@@ -714,7 +740,7 @@ class IntransitiveActivityModel(ActivityModel):
     type: str = &#34;IntransitiveActivity&#34;
 
     # Properties
-    object: None = None</code></pre>
+    object: None = None  # No object</code></pre>
 </details>
 </section>
 <section>
@@ -811,6 +837,8 @@ class IntransitiveActivityModel(ActivityModel):
         if item:
             v[i] = _must_be_links_or_images(item)
             _must_be_image_types(v[i])
+        else:
+            v.pop(i)
     return v</code></pre>
 </details>
 </dd>
@@ -828,6 +856,8 @@ class IntransitiveActivityModel(ActivityModel):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_links_or_objects(item)
+        else:
+            v.pop(i)
     return v</code></pre>
 </details>
 </dd>
@@ -845,6 +875,8 @@ class IntransitiveActivityModel(ActivityModel):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_links_or_urls(item)
+        else:
+            v.pop(i)
     return v</code></pre>
 </details>
 </dd>
@@ -862,6 +894,27 @@ class IntransitiveActivityModel(ActivityModel):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_no_spaces_or_commas(item)
+        else:
+            v.pop(i)
+    return v</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.models.core.validate_list_objects"><code class="name flex">
+<span>def <span class="ident">validate_list_objects</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_list_objects(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_objects(item)
+        else:
+            v.pop(i)
     return v</code></pre>
 </details>
 </dd>
@@ -921,12 +974,12 @@ allow <code>self</code> as a field name.</p></div>
     type: str = &#34;Activity&#34;
 
     # Properties
-    actor: List[Union[LinkModel, ObjectModel]] = None
-    object: ObjectModel = None
-    target: List[Union[LinkModel, ObjectModel]] = None
-    result: List[Union[LinkModel, ObjectModel]] = None
-    origin: List[Union[LinkModel, ObjectModel]] = None
-    instrument: List[Union[LinkModel, ObjectModel]] = None
+    actor: List[Union[None, LinkModel, ObjectModel]] = None
+    object: Union[None, ObjectModel] = None
+    target: List[Union[None, LinkModel, ObjectModel]] = None
+    result: List[Union[None, LinkModel, ObjectModel]] = None
+    origin: List[Union[None, LinkModel, ObjectModel]] = None
+    instrument: List[Union[None, LinkModel, ObjectModel]] = None
 
     # Validation
     _activity_objects = field_validator(&#34;object&#34;, mode=&#34;before&#34;)(validate_objects)
@@ -973,11 +1026,11 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.core.ActivityModel.actor"><code class="name">var <span class="ident">actor</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ActivityModel.actor"><code class="name">var <span class="ident">actor</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ActivityModel.instrument"><code class="name">var <span class="ident">instrument</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ActivityModel.instrument"><code class="name">var <span class="ident">instrument</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -989,19 +1042,19 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ActivityModel.object"><code class="name">var <span class="ident">object</span> : <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.core.ActivityModel.object"><code class="name">var <span class="ident">object</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ActivityModel.origin"><code class="name">var <span class="ident">origin</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ActivityModel.origin"><code class="name">var <span class="ident">origin</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ActivityModel.result"><code class="name">var <span class="ident">result</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ActivityModel.result"><code class="name">var <span class="ident">result</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ActivityModel.target"><code class="name">var <span class="ident">target</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ActivityModel.target"><code class="name">var <span class="ident">target</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1034,11 +1087,11 @@ allow <code>self</code> as a field name.</p></div>
     type: str = &#34;Collection&#34;
 
     # Collection properties
-    total_items: int = Field(None, ge=0)
-    current: Union[CollectionPageModel, LinkModel] = None
-    first: Union[CollectionPageModel, LinkModel] = None
-    last: Union[CollectionPageModel, LinkModel] = None
-    items: List[Union[LinkModel, ObjectModel]] = None
+    total_items: Union[None, int] = Field(None, ge=0)
+    current: Union[None, CollectionPageModel, LinkModel] = None
+    first: Union[None, CollectionPageModel, LinkModel] = None
+    last: Union[None, CollectionPageModel, LinkModel] = None
+    items: List[Union[None, LinkModel, ObjectModel]] = None  # May be an empty list
 
     # Validation
     _collection_list_links_or_objects = field_validator(&#34;items&#34;, mode=&#34;before&#34;)(
@@ -1064,19 +1117,19 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.core.CollectionModel.current"><code class="name">var <span class="ident">current</span> : Union[<a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionModel.current"><code class="name">var <span class="ident">current</span> : Union[None, <a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionModel.first"><code class="name">var <span class="ident">first</span> : Union[<a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionModel.first"><code class="name">var <span class="ident">first</span> : Union[None, <a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionModel.items"><code class="name">var <span class="ident">items</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionModel.items"><code class="name">var <span class="ident">items</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionModel.last"><code class="name">var <span class="ident">last</span> : Union[<a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionModel.last"><code class="name">var <span class="ident">last</span> : Union[None, <a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1088,7 +1141,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionModel.total_items"><code class="name">var <span class="ident">total_items</span> : int</code></dt>
+<dt id="activitypubdantic.models.core.CollectionModel.total_items"><code class="name">var <span class="ident">total_items</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1121,9 +1174,9 @@ allow <code>self</code> as a field name.</p></div>
     type: str = &#34;CollectionPage&#34;
 
     # Properties
-    part_of: Union[LinkModel, CollectionModel] = None
-    next: Union[LinkModel, CollectionPageModel] = None
-    prev: Union[LinkModel, CollectionPageModel] = None
+    part_of: Union[None, LinkModel, CollectionModel] = None
+    next: Union[None, LinkModel, CollectionPageModel] = None  # May not be a next page
+    prev: Union[None, LinkModel, CollectionPageModel] = None  # May not be a prev page
 
     # Validation
     _collectionpage_links_or_collections = field_validator(&#34;part_of&#34;, mode=&#34;before&#34;)(
@@ -1156,15 +1209,15 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionPageModel.next"><code class="name">var <span class="ident">next</span> : Union[<a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionPageModel.next"><code class="name">var <span class="ident">next</span> : Union[None, <a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionPageModel.part_of"><code class="name">var <span class="ident">part_of</span> : Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="#activitypubdantic.models.core.CollectionModel">CollectionModel</a>]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionPageModel.part_of"><code class="name">var <span class="ident">part_of</span> : Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="#activitypubdantic.models.core.CollectionModel">CollectionModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.CollectionPageModel.prev"><code class="name">var <span class="ident">prev</span> : Union[<a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
+<dt id="activitypubdantic.models.core.CollectionPageModel.prev"><code class="name">var <span class="ident">prev</span> : Union[None, <a title="activitypubdantic.models.core.CollectionPageModel" href="#activitypubdantic.models.core.CollectionPageModel">CollectionPageModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1353,7 +1406,7 @@ allow <code>self</code> as a field name.</p></div>
     type: str = &#34;IntransitiveActivity&#34;
 
     # Properties
-    object: None = None</code></pre>
+    object: None = None  # No object</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1410,20 +1463,20 @@ allow <code>self</code> as a field name.</p></div>
     # Type does not need to be literal for propogation
     type: str = &#34;Link&#34;
 
-    # Required properties
+    # Required property, cannot be null (otherwise, what&#39;s the point of a Link?)
     href: HttpUrl
 
     # Properties
-    rel: List[str] = None
-    media_type: mime_types = None
-    name: str = None
-    name_map: dict = (
-        None  # Dictionary of language keys and name values, validated below
-    )
-    hreflang: language_types = _DEFAULT_LANGUAGE
-    height: int = Field(None, ge=0)
-    width: int = Field(None, ge=0)
-    preview: List[Union[LinkModel, ObjectModel]] = None
+    rel: List[Union[str, None]] = None
+    media_type: Union[None, mime_types] = None
+    name: Union[None, str] = None
+    name_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and name values, validated below
+    hreflang: Union[None, language_types] = _DEFAULT_LANGUAGE
+    height: Union[None, int] = Field(None, ge=0)
+    width: Union[None, int] = Field(None, ge=0)
+    preview: List[Union[None, LinkModel, ObjectModel]] = None
 
     # Validation
     _link_language_strings = field_validator(&#34;name_map&#34;)(validate_language_keys)
@@ -1452,7 +1505,7 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.core.LinkModel.height"><code class="name">var <span class="ident">height</span> : int</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.height"><code class="name">var <span class="ident">height</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1460,11 +1513,11 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.hreflang"><code class="name">var <span class="ident">hreflang</span> : Literal['ar-SA', 'bn-BD', 'bn-IN', 'cs-CZ', 'da-DK', 'de-AT', 'de-CH', 'de-DE', 'el-GR', 'en-AU', 'en-CA', 'en-GB', 'en-IE', 'en-IN', 'en-NZ', 'en-US', 'en-ZA', 'es-AR', 'es-CL', 'es-CO', 'es-ES', 'es-MX', 'es-US', 'fi-FI', 'fr-BE', 'fr-CA', 'fr-CH', 'fr-FR', 'he-IL', 'hi-IN', 'hu-HU', 'id-ID', 'it-CH', 'it-IT', 'ja-JP', 'ko-KR', 'nl-BE', 'nl-NL', 'no-NO', 'pl-PL', 'pt-BR', 'pt-PT', 'ro-RO', 'ru-RU', 'sk-SK', 'sv-SE', 'ta-IN', 'ta-LK', 'th-TH', 'tr-TR', 'zh-CN', 'zh-HK', 'zh-TW', 'ar', 'bn', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'ko', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sk', 'sv', 'ta', 'th', 'tr', 'zh']</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.hreflang"><code class="name">var <span class="ident">hreflang</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.media_type"><code class="name">var <span class="ident">media_type</span> : Literal['audio/aac', 'application/x-abiword', 'application/x-freearc', 'image/avif', 'video/x-msvideo', 'application/vnd.amazon.ebook', 'application/octet-stream', 'image/bmp', 'application/x-bzip', 'application/x-bzip2', 'application/x-cdf', 'application/x-csh', 'text/css', 'text/csv', 'text/markdown', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-fontobject', 'application/epub+zip', 'application/gzip', 'image/gif', 'text/html', 'image/vnd.microsoft.icon', 'text/calendar', 'application/java-archive', 'image/jpeg', 'text/javascript', 'application/json', 'application/ld+json', 'audio/midi,\xa0audio/x-midi', 'text/javascript', 'audio/mpeg', 'video/mp4', 'video/mpeg', 'application/vnd.apple.installer+xml', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'audio/ogg', 'video/ogg', 'application/ogg', 'audio/opus', 'font/otf', 'image/png', 'application/pdf', 'application/x-httpd-php', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.rar', 'application/rtf', 'application/x-sh', 'image/svg+xml', 'application/x-tar', 'image/tiff', 'video/mp2t', 'font/ttf', 'text/plain', 'application/vnd.visio', 'audio/wav', 'audio/webm', 'video/webm', 'image/webp', 'font/woff', 'font/woff2', 'application/xhtml+xml', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.mozilla.xul+xml', 'application/zip', 'application/x-7z-compressed']</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.media_type"><code class="name">var <span class="ident">media_type</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1476,19 +1529,19 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.name"><code class="name">var <span class="ident">name</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.name_map"><code class="name">var <span class="ident">name_map</span> : dict</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.name_map"><code class="name">var <span class="ident">name_map</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.preview"><code class="name">var <span class="ident">preview</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.preview"><code class="name">var <span class="ident">preview</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.rel"><code class="name">var <span class="ident">rel</span> : List[str]</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.rel"><code class="name">var <span class="ident">rel</span> : List[Optional[str]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1496,7 +1549,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.LinkModel.width"><code class="name">var <span class="ident">width</span> : int</code></dt>
+<dt id="activitypubdantic.models.core.LinkModel.width"><code class="name">var <span class="ident">width</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1527,45 +1580,49 @@ allow <code>self</code> as a field name.</p></div>
     type: str = &#34;Object&#34;
 
     # All objects distributed by the ActivityPub protocol MUST have unique global identifiers.
-    # Unless they are intentionally transient.
-    # (Such as some kinds of chat messages or game notifications).
-    id: HttpUrl = None
+    # Unless they are intentionally transient, such as chat messages or game notifications.
+    # For that reason, IDs may be either a valid URL or None. They are not technically required.
+    id: Union[None, HttpUrl] = None
 
     # Properties
-    attachment: List[Union[LinkModel, ObjectModel]] = None
-    attributed_to: List[Union[LinkModel, ObjectModel]] = None
-    audience: List[Union[LinkModel, ObjectModel]] = None
-    content: str = None
-    content_map: dict = None  # Dictionary of language keys and content values
-    name: str = None
-    name_map: dict = None  # Dictionary of language keys and name values
-    end_time: datetime = None
-    generator: List[Union[LinkModel, ObjectModel]] = None
-    icon: List[Union[LinkModel, ImageModel]] = None
-    image: List[Union[LinkModel, ImageModel]] = None
-    in_reply_to: List[Union[LinkModel, ObjectModel]] = None
-    location: PlaceModel = None
-    preview: List[Union[LinkModel, ObjectModel]] = None
-    published: datetime = None
-    replies: ObjectModel = (
-        None  # For performance, use Object, but validate as Collection
-    )
-    start_time: datetime = None
-    summary: str = None
-    summary_map: dict = None  # Dictionary of language keys and summary values
-    tag: List[Union[LinkModel, ObjectModel]] = None
-    updated: datetime = None
-    url: List[Union[HttpUrl, LinkModel]] = None
-    to: List[Union[LinkModel, ObjectModel]] = None
-    bto: List[Union[LinkModel, ObjectModel]] = None
-    cc: List[Union[LinkModel, ObjectModel]] = None
-    bcc: List[Union[LinkModel, ObjectModel]] = None
-    media_type: mime_types = None
-    duration: str = None  # TODO: Validate the duration string.
+    attachment: List[Union[None, LinkModel, ObjectModel]] = None
+    attributed_to: List[Union[None, LinkModel, ObjectModel]] = None
+    audience: List[Union[None, LinkModel, ObjectModel]] = None
+    content: Union[None, str] = None
+    content_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and content values
+    name: Union[None, str] = None
+    name_map: Union[None, dict] = None  # Dictionary of language keys and name values
+    end_time: Union[None, datetime] = None
+    generator: List[Union[None, LinkModel, ObjectModel]] = None
+    icon: List[Union[None, LinkModel, ImageModel]] = None
+    image: List[Union[None, LinkModel, ImageModel]] = None
+    in_reply_to: List[Union[None, LinkModel, ObjectModel]] = None
+    location: Union[None, PlaceModel] = None
+    preview: List[Union[None, LinkModel, ObjectModel]] = None
+    published: Union[None, datetime] = None
+    replies: Union[
+        None, ObjectModel
+    ] = None  # For performance, use Object, but validate as Collection
+    start_time: Union[None, datetime] = None
+    summary: Union[None, str] = None
+    summary_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and summary values
+    tag: List[Union[None, LinkModel, ObjectModel]] = None
+    updated: Union[None, datetime] = None
+    url: List[Union[None, HttpUrl, LinkModel]] = None
+    to: List[Union[None, LinkModel, ObjectModel]] = None
+    bto: List[Union[None, LinkModel, ObjectModel]] = None
+    cc: List[Union[None, LinkModel, ObjectModel]] = None
+    bcc: List[Union[None, LinkModel, ObjectModel]] = None
+    media_type: Union[None, mime_types] = None
+    duration: Union[None, str] = None  # TODO: Validate the duration string.
 
     # Necessary for ActivityPub but not ActivityStreams
     # Documentation: https://www.w3.org/TR/activitypub/#source-property
-    source: ObjectModel = None
+    source: Union[None, ObjectModel] = None
 
     # Validation
     _object_language_strings = field_validator(
@@ -1592,7 +1649,6 @@ allow <code>self</code> as a field name.</p></div>
         &#34;cc&#34;,
         &#34;bcc&#34;,
         mode=&#34;before&#34;,
-        check_fields=False,
     )(validate_list_links_or_objects)
     _object_list_links_or_urls = field_validator(&#34;url&#34;, mode=&#34;before&#34;)(
         validate_list_links_or_urls
@@ -1626,71 +1682,71 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.core.ObjectModel.attachment"><code class="name">var <span class="ident">attachment</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.attachment"><code class="name">var <span class="ident">attachment</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.attributed_to"><code class="name">var <span class="ident">attributed_to</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.attributed_to"><code class="name">var <span class="ident">attributed_to</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.audience"><code class="name">var <span class="ident">audience</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.audience"><code class="name">var <span class="ident">audience</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.bcc"><code class="name">var <span class="ident">bcc</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.bcc"><code class="name">var <span class="ident">bcc</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.bto"><code class="name">var <span class="ident">bto</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.bto"><code class="name">var <span class="ident">bto</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.cc"><code class="name">var <span class="ident">cc</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.cc"><code class="name">var <span class="ident">cc</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.content"><code class="name">var <span class="ident">content</span> : str</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.content"><code class="name">var <span class="ident">content</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.content_map"><code class="name">var <span class="ident">content_map</span> : dict</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.content_map"><code class="name">var <span class="ident">content_map</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.duration"><code class="name">var <span class="ident">duration</span> : str</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.duration"><code class="name">var <span class="ident">duration</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.end_time"><code class="name">var <span class="ident">end_time</span> : datetime.datetime</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.end_time"><code class="name">var <span class="ident">end_time</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.generator"><code class="name">var <span class="ident">generator</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.generator"><code class="name">var <span class="ident">generator</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.icon"><code class="name">var <span class="ident">icon</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ImageModel" href="#activitypubdantic.models.core.ImageModel">ImageModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.icon"><code class="name">var <span class="ident">icon</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ImageModel" href="#activitypubdantic.models.core.ImageModel">ImageModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.id"><code class="name">var <span class="ident">id</span> : typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.id"><code class="name">var <span class="ident">id</span> : Optional[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.image"><code class="name">var <span class="ident">image</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ImageModel" href="#activitypubdantic.models.core.ImageModel">ImageModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.image"><code class="name">var <span class="ident">image</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ImageModel" href="#activitypubdantic.models.core.ImageModel">ImageModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.in_reply_to"><code class="name">var <span class="ident">in_reply_to</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.in_reply_to"><code class="name">var <span class="ident">in_reply_to</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.location"><code class="name">var <span class="ident">location</span> : <a title="activitypubdantic.models.core.PlaceModel" href="#activitypubdantic.models.core.PlaceModel">PlaceModel</a></code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.location"><code class="name">var <span class="ident">location</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.media_type"><code class="name">var <span class="ident">media_type</span> : Literal['audio/aac', 'application/x-abiword', 'application/x-freearc', 'image/avif', 'video/x-msvideo', 'application/vnd.amazon.ebook', 'application/octet-stream', 'image/bmp', 'application/x-bzip', 'application/x-bzip2', 'application/x-cdf', 'application/x-csh', 'text/css', 'text/csv', 'text/markdown', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-fontobject', 'application/epub+zip', 'application/gzip', 'image/gif', 'text/html', 'image/vnd.microsoft.icon', 'text/calendar', 'application/java-archive', 'image/jpeg', 'text/javascript', 'application/json', 'application/ld+json', 'audio/midi,\xa0audio/x-midi', 'text/javascript', 'audio/mpeg', 'video/mp4', 'video/mpeg', 'application/vnd.apple.installer+xml', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'audio/ogg', 'video/ogg', 'application/ogg', 'audio/opus', 'font/otf', 'image/png', 'application/pdf', 'application/x-httpd-php', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.rar', 'application/rtf', 'application/x-sh', 'image/svg+xml', 'application/x-tar', 'image/tiff', 'video/mp2t', 'font/ttf', 'text/plain', 'application/vnd.visio', 'audio/wav', 'audio/webm', 'video/webm', 'image/webp', 'font/woff', 'font/woff2', 'application/xhtml+xml', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.mozilla.xul+xml', 'application/zip', 'application/x-7z-compressed']</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.media_type"><code class="name">var <span class="ident">media_type</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1702,47 +1758,47 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.name"><code class="name">var <span class="ident">name</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.name_map"><code class="name">var <span class="ident">name_map</span> : dict</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.name_map"><code class="name">var <span class="ident">name_map</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.preview"><code class="name">var <span class="ident">preview</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.preview"><code class="name">var <span class="ident">preview</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.published"><code class="name">var <span class="ident">published</span> : datetime.datetime</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.published"><code class="name">var <span class="ident">published</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.replies"><code class="name">var <span class="ident">replies</span> : <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.replies"><code class="name">var <span class="ident">replies</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.source"><code class="name">var <span class="ident">source</span> : <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a></code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.source"><code class="name">var <span class="ident">source</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.start_time"><code class="name">var <span class="ident">start_time</span> : datetime.datetime</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.start_time"><code class="name">var <span class="ident">start_time</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.summary"><code class="name">var <span class="ident">summary</span> : str</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.summary"><code class="name">var <span class="ident">summary</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.summary_map"><code class="name">var <span class="ident">summary_map</span> : dict</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.summary_map"><code class="name">var <span class="ident">summary_map</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.tag"><code class="name">var <span class="ident">tag</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.tag"><code class="name">var <span class="ident">tag</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.to"><code class="name">var <span class="ident">to</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.to"><code class="name">var <span class="ident">to</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1750,11 +1806,11 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.updated"><code class="name">var <span class="ident">updated</span> : datetime.datetime</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.updated"><code class="name">var <span class="ident">updated</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.ObjectModel.url"><code class="name">var <span class="ident">url</span> : List[Union[typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)], <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.ObjectModel.url"><code class="name">var <span class="ident">url</span> : List[Union[None, typing_extensions.Annotated[pydantic_core._pydantic_core.Url, UrlConstraints(max_length=2083, allowed_schemes=['http', 'https'], host_required=None, default_host=None, default_port=None, default_path=None)], <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1784,7 +1840,9 @@ allow <code>self</code> as a field name.</p></div>
 
     # Properties
     items: None = None  # No items, only orderedItems
-    ordered_items: List[Union[LinkModel, ObjectModel]] = None
+    ordered_items: List[
+        Union[None, LinkModel, ObjectModel]
+    ] = None  # May be an empty list
 
     # Validation
     _orderedcollection_list_links_or_objects = field_validator(
@@ -1812,7 +1870,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.OrderedCollectionModel.ordered_items"><code class="name">var <span class="ident">ordered_items</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.OrderedCollectionModel.ordered_items"><code class="name">var <span class="ident">ordered_items</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1845,9 +1903,11 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;OrderedCollectionPage&#34;] = &#34;OrderedCollectionPage&#34;
 
     # Properties
-    start_index: int = Field(None, ge=0)
+    start_index: Union[None, int] = Field(None, ge=0)
     items: None = None  # No items, only orderedItems
-    ordered_items: List[Union[LinkModel, ObjectModel]] = None
+    ordered_items: List[
+        Union[None, LinkModel, ObjectModel]
+    ] = None  # May be an empty list
 
     # Validation
     _orderedcollectionpage_list_links_or_objects = field_validator(
@@ -1876,11 +1936,11 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.OrderedCollectionPageModel.ordered_items"><code class="name">var <span class="ident">ordered_items</span> : List[Union[<a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.core.OrderedCollectionPageModel.ordered_items"><code class="name">var <span class="ident">ordered_items</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.OrderedCollectionPageModel.start_index"><code class="name">var <span class="ident">start_index</span> : int</code></dt>
+<dt id="activitypubdantic.models.core.OrderedCollectionPageModel.start_index"><code class="name">var <span class="ident">start_index</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1915,12 +1975,12 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;Place&#34;] = &#34;Place&#34;
 
     # Properties
-    accuracy: float = None
-    altitude: float = None
-    longitude: float = None
-    latitude: float = None
-    radius: float = None
-    units: str = None</code></pre>
+    accuracy: Union[None, float] = None
+    altitude: Union[None, float] = None
+    longitude: Union[None, float] = None
+    latitude: Union[None, float] = None
+    radius: Union[None, float] = None
+    units: Union[None, str] = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1930,19 +1990,19 @@ allow <code>self</code> as a field name.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="activitypubdantic.models.core.PlaceModel.accuracy"><code class="name">var <span class="ident">accuracy</span> : float</code></dt>
+<dt id="activitypubdantic.models.core.PlaceModel.accuracy"><code class="name">var <span class="ident">accuracy</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.PlaceModel.altitude"><code class="name">var <span class="ident">altitude</span> : float</code></dt>
+<dt id="activitypubdantic.models.core.PlaceModel.altitude"><code class="name">var <span class="ident">altitude</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.PlaceModel.latitude"><code class="name">var <span class="ident">latitude</span> : float</code></dt>
+<dt id="activitypubdantic.models.core.PlaceModel.latitude"><code class="name">var <span class="ident">latitude</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.PlaceModel.longitude"><code class="name">var <span class="ident">longitude</span> : float</code></dt>
+<dt id="activitypubdantic.models.core.PlaceModel.longitude"><code class="name">var <span class="ident">longitude</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1954,7 +2014,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.PlaceModel.radius"><code class="name">var <span class="ident">radius</span> : float</code></dt>
+<dt id="activitypubdantic.models.core.PlaceModel.radius"><code class="name">var <span class="ident">radius</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1962,7 +2022,7 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.core.PlaceModel.units"><code class="name">var <span class="ident">units</span> : str</code></dt>
+<dt id="activitypubdantic.models.core.PlaceModel.units"><code class="name">var <span class="ident">units</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1993,6 +2053,7 @@ allow <code>self</code> as a field name.</p></div>
 <li><code><a title="activitypubdantic.models.core.validate_list_links_or_objects" href="#activitypubdantic.models.core.validate_list_links_or_objects">validate_list_links_or_objects</a></code></li>
 <li><code><a title="activitypubdantic.models.core.validate_list_links_or_urls" href="#activitypubdantic.models.core.validate_list_links_or_urls">validate_list_links_or_urls</a></code></li>
 <li><code><a title="activitypubdantic.models.core.validate_list_no_spaces_or_commas" href="#activitypubdantic.models.core.validate_list_no_spaces_or_commas">validate_list_no_spaces_or_commas</a></code></li>
+<li><code><a title="activitypubdantic.models.core.validate_list_objects" href="#activitypubdantic.models.core.validate_list_objects">validate_list_objects</a></code></li>
 <li><code><a title="activitypubdantic.models.core.validate_objects" href="#activitypubdantic.models.core.validate_objects">validate_objects</a></code></li>
 <li><code><a title="activitypubdantic.models.core.validate_places" href="#activitypubdantic.models.core.validate_places">validate_places</a></code></li>
 </ul>
