@@ -68,7 +68,7 @@ def _must_be_language_keys(v):
 # Sometimes media must be of the image mime type
 def _must_be_image_types(v):
     if v is not None:
-        if "media_type" in v and v.media_type not in image_mime_types:
+        if "media_type" in v and v["media_type"] not in image_mime_types:
             raise ValueError(f"Media type {v.media_type} is not a defined image type.")
     return v
 
@@ -383,7 +383,7 @@ class LinkModel(CoreModel):
     # Type does not need to be literal for propogation
     type: str = "Link"
 
-    # Required properties
+    # Required property
     href: HttpUrl
 
     # Properties
@@ -430,9 +430,9 @@ class ObjectModel(CoreModel):
     type: str = "Object"
 
     # All objects distributed by the ActivityPub protocol MUST have unique global identifiers.
-    # Unless they are intentionally transient.
-    # (Such as some kinds of chat messages or game notifications).
-    id: HttpUrl = None
+    # Unless they are intentionally transient, such as chat messages or game notifications.
+    # For that reason, IDs may be either a valid URL or None.
+    id: Union[HttpUrl, None] = None
 
     # Properties
     attachment: List[Union[LinkModel, ObjectModel]] = None
@@ -459,7 +459,7 @@ class ObjectModel(CoreModel):
     tag: List[Union[LinkModel, ObjectModel]] = None
     updated: datetime = None
     url: List[Union[HttpUrl, LinkModel]] = None
-    to: List[Union[LinkModel, ObjectModel]] = None
+    to: List[Union[LinkModel, ObjectModel, None]] = None
     bto: List[Union[LinkModel, ObjectModel]] = None
     cc: List[Union[LinkModel, ObjectModel]] = None
     bcc: List[Union[LinkModel, ObjectModel]] = None
@@ -495,7 +495,6 @@ class ObjectModel(CoreModel):
         "cc",
         "bcc",
         mode="before",
-        check_fields=False,
     )(validate_list_links_or_objects)
     _object_list_links_or_urls = field_validator("url", mode="before")(
         validate_list_links_or_urls

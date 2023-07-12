@@ -100,14 +100,14 @@ The `output_json` is longer and, at first glance, more complex. But because it c
 }
 ```
 
-However, not every project requires this degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through the URL `id` fields in the JSON.
+However, not every project requires this degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through the `id` URLs in the JSON.
 
 ```python
 short_output_json = output_class.json(verbose=False)
 print(short_output_json)  # See JSON below
 ```
 
-A verbosity flag shortens the output, retaining consistency but eliminating potentially unneeded data.
+A verbosity flag shortens the output, retaining consistency but eliminating potentially unneeded data for your implementation.
 
 ```json
 {
@@ -129,3 +129,5 @@ A verbosity flag shortens the output, retaining consistency but eliminating pote
   "object": "https://rhiaro.co.uk/2016/05/minimal-activitypub"
 }
 ```
+
+In **ActivityPubdantic**, all `Activities` are identified by their type, which must be present for the `get_class()` function to map to the correct Pydantic model to load.

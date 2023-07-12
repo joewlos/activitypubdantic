@@ -1,0 +1,103 @@
+{
+    "@context": [
+        "https://www.w3.org/ns/activitystreams",
+        "https://w3id.org/security/v1",
+        {
+            "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+            "toot": "http://joinmastodon.org/ns#",
+            "featured": {
+                "@id": "toot:featured",
+                "@type": "@id"
+            },
+            "featuredTags": {
+                "@id": "toot:featuredTags",
+                "@type": "@id"
+            },
+            "alsoKnownAs": {
+                "@id": "as:alsoKnownAs",
+                "@type": "@id"
+            },
+            "movedTo": {
+                "@id": "as:movedTo",
+                "@type": "@id"
+            },
+            "schema": "http://schema.org#",
+            "PropertyValue": "schema:PropertyValue",
+            "value": "schema:value",
+            "discoverable": "toot:discoverable",
+            "Device": "toot:Device",
+            "Ed25519Signature": "toot:Ed25519Signature",
+            "Ed25519Key": "toot:Ed25519Key",
+            "Curve25519Key": "toot:Curve25519Key",
+            "EncryptedMessage": "toot:EncryptedMessage",
+            "publicKeyBase64": "toot:publicKeyBase64",
+            "deviceId": "toot:deviceId",
+            "claim": {
+                "@type": "@id",
+                "@id": "toot:claim"
+            },
+            "fingerprintKey": {
+                "@type": "@id",
+                "@id": "toot:fingerprintKey"
+            },
+            "identityKey": {
+                "@type": "@id",
+                "@id": "toot:identityKey"
+            },
+            "devices": {
+                "@type": "@id",
+                "@id": "toot:devices"
+            },
+            "messageFranking": "toot:messageFranking",
+            "messageType": "toot:messageType",
+            "cipherText": "toot:cipherText",
+            "suspended": "toot:suspended",
+            "focalPoint": {
+                "@container": "@list",
+                "@id": "toot:focalPoint"
+            }
+        }
+    ],
+    "id": "https://mastodon.social/users/crepels",
+    "type": "Person",
+    "following": "https://mastodon.social/users/crepels/following",
+    "followers": "https://mastodon.social/users/crepels/followers",
+    "inbox": "https://mastodon.social/users/crepels/inbox",
+    "outbox": "https://mastodon.social/users/crepels/outbox",
+    "featured": "https://mastodon.social/users/crepels/collections/featured",
+    "featuredTags": "https://mastodon.social/users/crepels/collections/tags",
+    "preferredUsername": "crepels",
+    "name": "Sebastian Jambor",
+    "summary": "<p>I created a systemd playground to help people learn systemd.</p>",
+    "url": "https://mastodon.social/@crepels",
+    "manuallyApprovesFollowers": false,
+    "discoverable": true,
+    "published": "2022-05-01T00:00:00Z",
+    "devices": "https://mastodon.social/users/crepels/collections/devices",
+    "publicKey": {
+        "id": "https://mastodon.social/users/crepels#main-key",
+        "owner": "https://mastodon.social/users/crepels",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzCg7ogX8utFGjeOs7EeX\nKLUixqzlyrCFobv+Pcqhmw8WrMYnm3jrbUWkjcOUHaepAFAgauns+Tr5XwmAsNkx\nYLqyVipartwf8/tdiHZAhHgOdvtfd3dXHDpZKyeQfOtdt2AxftMihg9wmCyupAJC\naLNbyx4S9Q+aDVkaaHiFvhTNWHNR4rf3OKvQixiopry0G9oCCkUxWs+z4RT8Rx+R\nOLteufRh6WOn7YgqeMcJ4hZ/DcQZD3JtdJfEwUDftEW3xkoI/T1IA2QYAr3m4xHJ\nhv3TONr6VD/Bx5RPUsBDvXOlN5hbadClOQURybuyUBe1D+Md6SYHSQ4Q/x0y6L9+\nhQIDAQAB\n-----END PUBLIC KEY-----\n"
+    },
+    "tag": [],
+    "attachment": [
+        {
+            "type": "PropertyValue",
+            "name": "Blog",
+            "value": "<a href=\"https://seb.jambor.dev\" target=\"_blank\" rel=\"nofollow noopener noreferrer me\"><span class=\"invisible\">https://</span><span class=\"\">seb.jambor.dev</span><span class=\"invisible\"></span></a>"
+        },
+        {
+            "type": "PropertyValue",
+            "name": "systemd by example",
+            "value": "<a href=\"https://systemd-by-example.com/\" target=\"_blank\" rel=\"nofollow noopener noreferrer me\"><span class=\"invisible\">https://</span><span class=\"\">systemd-by-example.com/</span><span class=\"invisible\"></span></a>"
+        }
+    ],
+    "endpoints": {
+        "sharedInbox": "https://mastodon.social/inbox"
+    },
+    "icon": {
+        "type": "Image",
+        "mediaType": "image/png",
+        "url": "https://files.mastodon.social/accounts/avatars/108/227/485/389/961/502/original/1213d525278ae01d.png"
+    }
+}

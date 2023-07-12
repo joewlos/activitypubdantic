@@ -87,12 +87,17 @@ def get_model(
     Return the Pydantic model for the input JSON.
     The input JSON must include a type field, which is used to select the right model.
     """
+    output = None
     if "type" in input_json and input_json["type"] in _MODEL_MAPPINGS:
         output = _MODEL_MAPPINGS[input_json["type"]](**input_json)
 
     # If there is no type, throw an error – this is required
     elif "type" not in input_json:
         raise ValueError("Input JSON must include a type.")
+
+    # If there is no output, throw an error – this type is not supported
+    if not output:
+        raise ValueError(f"This type is not supported.")
 
     # Return the output model, formatted according to settings
     return output

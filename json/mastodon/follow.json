@@ -1,0 +1,7 @@
+{
+    "@context": "https://www.w3.org/ns/activitystreams",
+    "id": "https://activitypub.academy/67ab1a23-4689-4c32-b8f5-c053205b95de",
+    "type": "Follow",
+    "actor": "https://activitypub.academy/users/dibutus_godorviol",
+    "object": "https://lemmy.world/u/landon"
+}

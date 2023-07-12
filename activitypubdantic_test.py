@@ -142,6 +142,25 @@ class TestActivityPub:
         assert len(output_data["to"]) == len(input_json["to"])
         assert output_model.type == input_json["type"] == output_data["type"] == "Like"
 
+    def test_article(self):
+        """
+        Test that the Article model can load the example from the spec.
+        """
+        with open("json/activitypub/article.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["name"] == input_json["name"]
+        assert output_data["content"] == input_json["content"]
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Article"
+        )
+
 
 class TestActivityStreams:
     """
@@ -188,6 +207,159 @@ class TestActivityStreams:
         assert output_model.type == input_json["type"] == "Person"
         assert output_verbose == match_verbose
         assert output_short == match_short
+
+    def test_accept(self):
+        """
+        Test that the Accept model can load the example from the spec.
+        """
+        with open("json/activitystreams/accept.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["summary"] == input_json["summary"]
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Accept"
+        )
+
+    def test_article(self):
+        """
+        Test that the Article model can load the example from the spec.
+        """
+        with open("json/activitystreams/article.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["content"] == input_json["content"]
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Article"
+        )
+
+    def test_image(self):
+        """
+        Test that the Image model can load the example from the spec.
+        """
+        with open("json/activitystreams/image.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["name"] == input_json["name"]
+        assert len(output_data["url"]) == len(input_json["url"])
+        assert output_model.type == input_json["type"] == output_data["type"] == "Image"
+
+    def test_place(self):
+        """
+        Test that the Place model can load the example from the spec.
+        """
+        with open("json/activitystreams/place.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["name"] == input_json["name"]
+        assert output_data["latitude"] == input_json["latitude"]
+        assert output_model.type == input_json["type"] == output_data["type"] == "Place"
+
+    def test_tombsone(self):
+        """
+        Test that the Tombstone model can load the example from the spec.
+        """
+        with open("json/activitystreams/tombstone.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["name"] == input_json["name"]
+        assert output_data["totalItems"] == input_json["totalItems"]
+        assert len(output_data["orderedItems"]) == len(input_json["orderedItems"])
+        assert (
+            output_model.type
+            == input_json["type"]
+            == output_data["type"]
+            == "OrderedCollection"
+        )  # TODO: Why is this OrderedCollection?
+
+    def test_collection(self):
+        """
+        Test that the Collection model can load the example from the spec.
+        """
+        with open("json/activitystreams/collection.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["summary"] == input_json["summary"]
+        assert len(output_data["items"]) == len(input_json["items"])
+        assert (
+            output_model.type
+            == input_json["type"]
+            == output_data["type"]
+            == "Collection"
+        )
+
+    def test_question(self):
+        """
+        Test that the Question model can load the example from the spec.
+        """
+        with open("json/activitystreams/question.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["content"] == input_json["content"]
+        assert output_data["replies"]["type"] == input_json["replies"]["type"]
+        assert len(output_data["oneOf"]) == len(input_json["oneOf"])
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Question"
+        )
+
+    def test_add(self):
+        """
+        Test that the Add model can load the example from the spec.
+        """
+        with open("json/activitystreams/add.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["summary"] == input_json["summary"]
+        assert output_data["actor"][0]["type"] == input_json["actor"]["type"]
+        assert output_data["target"][0]["name"] == input_json["target"]["name"]
+        assert output_model.type == input_json["type"] == output_data["type"] == "Add"
 
 
 class TestMastodon:
@@ -332,3 +504,76 @@ class TestMastodon:
         assert poll_model.type == poll_json["type"] == "Question"
         assert poll_verbose == match_verbose
         assert poll_short == match_short
+
+    def test_person(self):
+        """
+        Test that the Person model can load the example from the spec.
+        """
+        with open("json/mastodon/person.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["preferredUsername"] == input_json["preferredUsername"]
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Person"
+        )
+
+    def test_create(self):
+        """
+        Test that the Create model can load the example from the spec.
+        """
+        with open("json/mastodon/create.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["object"]["type"] == input_json["object"]["type"] == "Note"
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Create"
+        )
+
+    def test_follow(self):
+        """
+        Test that the Follow model can load the example from the spec.
+        """
+        with open("json/mastodon/follow.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["object"]["type"] == "Object"
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Follow"
+        )
+
+    def test_accept(self):
+        """
+        Test that the Accept model can load the example from the spec.
+        """
+        with open("json/mastodon/accept.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["actor"][0]["type"] == "Object"
+        assert len(output_data["to"]) == len(input_json["to"]) == 1
+        assert (
+            output_model.type == input_json["type"] == output_data["type"] == "Accept"
+        )

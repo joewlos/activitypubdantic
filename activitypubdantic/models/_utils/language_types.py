@@ -89,4 +89,5 @@ language_types = Literal[
     "th",
     "tr",
     "zh",
+    "und",  # Undefined
 ]

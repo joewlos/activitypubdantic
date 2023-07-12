@@ -1,0 +1,40 @@
+{
+    "@context": [
+        "https://www.w3.org/ns/activitystreams",
+        "https://w3id.org/security/v1",
+        {
+            "lemmy": "https://join-lemmy.org/ns#",
+            "litepub": "http://litepub.social/ns#",
+            "pt": "https://joinpeertube.org/ns#",
+            "sc": "http://schema.org/",
+            "ChatMessage": "litepub:ChatMessage",
+            "commentsEnabled": "pt:commentsEnabled",
+            "sensitive": "as:sensitive",
+            "matrixUserId": "lemmy:matrixUserId",
+            "postingRestrictedToMods": "lemmy:postingRestrictedToMods",
+            "removeData": "lemmy:removeData",
+            "stickied": "lemmy:stickied",
+            "moderators": {
+                "@type": "@id",
+                "@id": "lemmy:moderators"
+            },
+            "expires": "as:endTime",
+            "distinguished": "lemmy:distinguished",
+            "language": "sc:inLanguage",
+            "identifier": "sc:identifier"
+        }
+    ],
+    "actor": "https://lemmy.world/u/landon",
+    "to": [
+        "https://activitypub.academy/users/dibutus_godorviol"
+    ],
+    "object": {
+        "actor": "https://activitypub.academy/users/dibutus_godorviol",
+        "to": null,
+        "object": "https://lemmy.world/u/landon",
+        "type": "Follow",
+        "id": "https://activitypub.academy/67ab1a23-4689-4c32-b8f5-c053205b95de"
+    },
+    "type": "Accept",
+    "id": "https://lemmy.world/activities/accept/926fa852-2c56-4a3f-856b-89bad1423de8"
+}
