@@ -212,3 +212,19 @@ def get_class(
     # Return a class which includes possible actions for the ActivityPub JSON
     output_class = _CLASS_MAPPINGS[output_model.type]
     return output_class(output_model, input_json)
+
+
+def get_class_from_model(
+    input_model: Union[
+        ActivityModel, CollectionModel, LinkModel, ObjectModel
+    ]  # Must be a Pydantic model
+) -> Union[Activity, Actor, Collection, Link, Object]:
+    """
+    Get a class for manipulating the input ActivityPub JSON.
+    This function assumes any input is a Pydantic model, with no further validation required.
+    """
+    output_class = _CLASS_MAPPINGS[input_model.type]
+    return output_class(
+        input_model,
+        json.loads(input_model.model_dump_json(by_alias=True, exclude_none=True)),
+    )

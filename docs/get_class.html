@@ -240,7 +240,23 @@ def get_class(
 
     # Return a class which includes possible actions for the ActivityPub JSON
     output_class = _CLASS_MAPPINGS[output_model.type]
-    return output_class(output_model, input_json)</code></pre>
+    return output_class(output_model, input_json)
+
+
+def get_class_from_model(
+    input_model: Union[
+        ActivityModel, CollectionModel, LinkModel, ObjectModel
+    ]  # Must be a Pydantic model
+) -&gt; Union[Activity, Actor, Collection, Link, Object]:
+    &#34;&#34;&#34;
+    Get a class for manipulating the input ActivityPub JSON.
+    This function assumes any input is a Pydantic model, with no further validation required.
+    &#34;&#34;&#34;
+    output_class = _CLASS_MAPPINGS[input_model.type]
+    return output_class(
+        input_model,
+        json.loads(input_model.model_dump_json(by_alias=True, exclude_none=True)),
+    )</code></pre>
 </details>
 </section>
 <section>
@@ -276,6 +292,32 @@ This function assumes any input string is JSON and parses it.</p></div>
     # Return a class which includes possible actions for the ActivityPub JSON
     output_class = _CLASS_MAPPINGS[output_model.type]
     return output_class(output_model, input_json)</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.get_class.get_class_from_model"><code class="name flex">
+<span>def <span class="ident">get_class_from_model</span></span>(<span>input_model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]) ‑> Union[<a title="activitypubdantic.get_class.Activity" href="#activitypubdantic.get_class.Activity">Activity</a>, <a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a>, <a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a>, <a title="activitypubdantic.get_class.Link" href="#activitypubdantic.get_class.Link">Link</a>, <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a class for manipulating the input ActivityPub JSON.
+This function assumes any input is a Pydantic model, with no further validation required.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_class_from_model(
+    input_model: Union[
+        ActivityModel, CollectionModel, LinkModel, ObjectModel
+    ]  # Must be a Pydantic model
+) -&gt; Union[Activity, Actor, Collection, Link, Object]:
+    &#34;&#34;&#34;
+    Get a class for manipulating the input ActivityPub JSON.
+    This function assumes any input is a Pydantic model, with no further validation required.
+    &#34;&#34;&#34;
+    output_class = _CLASS_MAPPINGS[input_model.type]
+    return output_class(
+        input_model,
+        json.loads(input_model.model_dump_json(by_alias=True, exclude_none=True)),
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -587,6 +629,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="activitypubdantic.get_class.get_class" href="#activitypubdantic.get_class.get_class">get_class</a></code></li>
+<li><code><a title="activitypubdantic.get_class.get_class_from_model" href="#activitypubdantic.get_class.get_class_from_model">get_class_from_model</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
