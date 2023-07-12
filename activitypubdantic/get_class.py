@@ -12,6 +12,20 @@ from typing import Union
 
 
 """
+DEFAULTS
+"""
+
+
+_DEFAULT_LANGUAGES = ["en", "en-US"]
+_DEFAULT_MAP_FIELDS = {
+    "content_map": "content",
+    "summary_map": "summary",
+    "name_map": "name",
+}
+_DEFAULT_PROTECTED_FIELDS = ["data", "model", "input_json", "_data", "json"]
+
+
+"""
 CLASSES
 """
 
@@ -27,9 +41,26 @@ class Base:
             ActivityModel, ActorModel, CollectionModel, LinkModel, ObjectModel
         ],
         input_json: Union[dict, list],
+        default_languages: list = _DEFAULT_LANGUAGES,
     ):
         self.model = model
         self.input_json = input_json
+        self._data = self.data(
+            exclude_none=False, by_alias=False
+        )  # Use underscore to avoid conflict with data() function
+
+        # For each key,value pair in the input_json, set the class attribute
+        for k, v in self._data.items():
+            if k not in _DEFAULT_PROTECTED_FIELDS:
+                setattr(self, k, v)
+
+        # For mapped fields, update their corresponding value with the default language
+        for k, v in _DEFAULT_MAP_FIELDS.items():
+            if k in self._data:
+                for language in default_languages:
+                    if self._data[k] and language in self._data[k]:
+                        setattr(self, v, self._data[k][language])
+                        break
 
     def data(
         self,
@@ -38,7 +69,7 @@ class Base:
         verbose: bool = True,
     ):
         """
-        Return the class input_json as a Python dictionary or list.
+        Return the class input_json as a Python dictionary or list with settings.
         """
         return get_model_data(
             self.input_json,
@@ -55,7 +86,7 @@ class Base:
         indent: int = 2,
     ):
         """
-        Return the class input_json as a JSON string.
+        Return the class input_json as a JSON string with settings.
         """
         return get_model_json(
             self.input_json,

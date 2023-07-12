@@ -45,6 +45,8 @@ def validate_list_collections(v):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_collections(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -69,12 +71,12 @@ class EndpointsModel(BaseModel):
     model_config = ConfigDict(alias_generator=_must_be_camel, populate_by_name=True)
 
     # Properties
-    proxy_url: HttpUrl = None
-    oauth_authorization_endpoint: HttpUrl = None
-    oauth_token_endpoint: HttpUrl = None
-    provide_client_key: HttpUrl = None
-    sign_client_key: HttpUrl = None
-    shared_inbox: HttpUrl = None
+    proxy_url: Union[None, HttpUrl] = None
+    oauth_authorization_endpoint: Union[HttpUrl, None] = None
+    oauth_token_endpoint: Union[HttpUrl, None] = None
+    provide_client_key: Union[HttpUrl, None] = None
+    sign_client_key: Union[HttpUrl, None] = None
+    shared_inbox: Union[HttpUrl, None] = None
 
 
 """
@@ -93,13 +95,13 @@ class ActorModel(ObjectModel):
 
     # Properties
     preferred_username: str = None
-    inbox: ObjectModel = None
-    outbox: ObjectModel = None
-    following: ObjectModel = None
-    followers: ObjectModel = None
-    liked: ObjectModel = None
-    streams: List[ObjectModel] = None
-    endpoints: Union[HttpUrl, EndpointsModel] = None
+    inbox: ObjectModel = None  # Required
+    outbox: ObjectModel = None  # Required
+    following: Union[None, ObjectModel] = None
+    followers: Union[None, ObjectModel] = None
+    liked: Union[None, ObjectModel] = None
+    streams: List[Union[None, ObjectModel]] = None
+    endpoints: Union[None, HttpUrl, EndpointsModel] = None
 
     # Validation
     _actor_collections = field_validator(

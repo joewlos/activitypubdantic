@@ -17,6 +17,7 @@ from activitypubdantic.models.core import (
     ObjectModel,
     PlaceModel,
     validate_list_links_or_objects,
+    validate_list_objects,
 )
 
 """
@@ -33,14 +34,17 @@ class RelationshipModel(ObjectModel):
     type: Literal["Relationship"] = "Relationship"
 
     # Properties
-    subject: List[Union[LinkModel, ObjectModel]] = None
-    object: List[Union[LinkModel, ObjectModel]] = None
-    relationship: List[ObjectModel] = None
+    subject: List[Union[None, LinkModel, ObjectModel]] = None
+    object: List[Union[None, LinkModel, ObjectModel]] = None
+    relationship: List[Union[None, ObjectModel]] = None
 
     # Validators
     _relationship_list_links_or_objects = field_validator(
         "subject", "object", mode="before"
     )(validate_list_links_or_objects)
+    _relationship_list_objects = field_validator("relationship", mode="before")(
+        validate_list_objects
+    )
 
 
 class ArticleModel(ObjectModel):
@@ -107,7 +111,7 @@ class ProfileModel(ObjectModel):
     type: Literal["Profile"] = "Profile"
 
     # Properties
-    describes: ObjectModel = None
+    describes: Union[None, ObjectModel] = None
 
 
 class TombstoneModel(ObjectModel):
@@ -119,5 +123,5 @@ class TombstoneModel(ObjectModel):
     type: Literal["Tombstone"] = "Tombstone"
 
     # Properties
-    former_type: ObjectModel = None
-    deleted: datetime = None
+    former_type: Union[None, ObjectModel] = None
+    deleted: Union[None, datetime] = None

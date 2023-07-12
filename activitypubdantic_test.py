@@ -361,6 +361,24 @@ class TestActivityStreams:
         assert output_data["target"][0]["name"] == input_json["target"]["name"]
         assert output_model.type == input_json["type"] == output_data["type"] == "Add"
 
+    def test_move(self):
+        """
+        Test that the Move model can load the example from the spec.
+        """
+        with open("json/activitystreams/move.json", "r") as f:
+            input_json = json.load(f)
+
+        # Load the model and class
+        output_model = ap.get_model(input_json)
+        output_class = ap.get_class(input_json)
+        output_data = output_class.data()
+
+        # Assert that the data is the same
+        assert output_data["summary"] == input_json["summary"]
+        assert output_data["target"][0]["type"] == input_json["target"]["type"]
+        assert output_data["target"][0]["name"] == input_json["target"]["name"]
+        assert output_model.type == input_json["type"] == output_data["type"] == "Move"
+
 
 class TestMastodon:
     """

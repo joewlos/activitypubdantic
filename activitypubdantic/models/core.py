@@ -276,6 +276,8 @@ def validate_list_links_or_objects(v):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_links_or_objects(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -290,6 +292,8 @@ def validate_list_no_spaces_or_commas(v):
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_no_spaces_or_commas(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -312,6 +316,8 @@ def validate_list_links_or_images(v):
         if item:
             v[i] = _must_be_links_or_images(item)
             _must_be_image_types(v[i])
+        else:
+            v.pop(i)
     return v
 
 
@@ -330,12 +336,25 @@ def validate_objects(v):
     return _must_be_objects(v)
 
 
+# Validate list of Objects
+def validate_list_objects(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_objects(item)
+        else:
+            v.pop(i)
+    return v
+
+
 # Validate list of Links or HttpUrls
 def validate_list_links_or_urls(v):
     v = _must_be_list(v)
     for i, item in enumerate(v):
         if item:
             v[i] = _must_be_links_or_urls(item)
+        else:
+            v.pop(i)
     return v
 
 
@@ -383,20 +402,20 @@ class LinkModel(CoreModel):
     # Type does not need to be literal for propogation
     type: str = "Link"
 
-    # Required property
+    # Required property, cannot be null (otherwise, what's the point of a Link?)
     href: HttpUrl
 
     # Properties
-    rel: List[str] = None
-    media_type: mime_types = None
-    name: str = None
-    name_map: dict = (
-        None  # Dictionary of language keys and name values, validated below
-    )
-    hreflang: language_types = _DEFAULT_LANGUAGE
-    height: int = Field(None, ge=0)
-    width: int = Field(None, ge=0)
-    preview: List[Union[LinkModel, ObjectModel]] = None
+    rel: List[Union[str, None]] = None
+    media_type: Union[None, mime_types] = None
+    name: Union[None, str] = None
+    name_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and name values, validated below
+    hreflang: Union[None, language_types] = _DEFAULT_LANGUAGE
+    height: Union[None, int] = Field(None, ge=0)
+    width: Union[None, int] = Field(None, ge=0)
+    preview: List[Union[None, LinkModel, ObjectModel]] = None
 
     # Validation
     _link_language_strings = field_validator("name_map")(validate_language_keys)
@@ -431,44 +450,48 @@ class ObjectModel(CoreModel):
 
     # All objects distributed by the ActivityPub protocol MUST have unique global identifiers.
     # Unless they are intentionally transient, such as chat messages or game notifications.
-    # For that reason, IDs may be either a valid URL or None.
-    id: Union[HttpUrl, None] = None
+    # For that reason, IDs may be either a valid URL or None. They are not technically required.
+    id: Union[None, HttpUrl] = None
 
     # Properties
-    attachment: List[Union[LinkModel, ObjectModel]] = None
-    attributed_to: List[Union[LinkModel, ObjectModel]] = None
-    audience: List[Union[LinkModel, ObjectModel]] = None
-    content: str = None
-    content_map: dict = None  # Dictionary of language keys and content values
-    name: str = None
-    name_map: dict = None  # Dictionary of language keys and name values
-    end_time: datetime = None
-    generator: List[Union[LinkModel, ObjectModel]] = None
-    icon: List[Union[LinkModel, ImageModel]] = None
-    image: List[Union[LinkModel, ImageModel]] = None
-    in_reply_to: List[Union[LinkModel, ObjectModel]] = None
-    location: PlaceModel = None
-    preview: List[Union[LinkModel, ObjectModel]] = None
-    published: datetime = None
-    replies: ObjectModel = (
-        None  # For performance, use Object, but validate as Collection
-    )
-    start_time: datetime = None
-    summary: str = None
-    summary_map: dict = None  # Dictionary of language keys and summary values
-    tag: List[Union[LinkModel, ObjectModel]] = None
-    updated: datetime = None
-    url: List[Union[HttpUrl, LinkModel]] = None
-    to: List[Union[LinkModel, ObjectModel, None]] = None
-    bto: List[Union[LinkModel, ObjectModel]] = None
-    cc: List[Union[LinkModel, ObjectModel]] = None
-    bcc: List[Union[LinkModel, ObjectModel]] = None
-    media_type: mime_types = None
-    duration: str = None  # TODO: Validate the duration string.
+    attachment: List[Union[None, LinkModel, ObjectModel]] = None
+    attributed_to: List[Union[None, LinkModel, ObjectModel]] = None
+    audience: List[Union[None, LinkModel, ObjectModel]] = None
+    content: Union[None, str] = None
+    content_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and content values
+    name: Union[None, str] = None
+    name_map: Union[None, dict] = None  # Dictionary of language keys and name values
+    end_time: Union[None, datetime] = None
+    generator: List[Union[None, LinkModel, ObjectModel]] = None
+    icon: List[Union[None, LinkModel, ImageModel]] = None
+    image: List[Union[None, LinkModel, ImageModel]] = None
+    in_reply_to: List[Union[None, LinkModel, ObjectModel]] = None
+    location: Union[None, PlaceModel] = None
+    preview: List[Union[None, LinkModel, ObjectModel]] = None
+    published: Union[None, datetime] = None
+    replies: Union[
+        None, ObjectModel
+    ] = None  # For performance, use Object, but validate as Collection
+    start_time: Union[None, datetime] = None
+    summary: Union[None, str] = None
+    summary_map: Union[
+        None, dict
+    ] = None  # Dictionary of language keys and summary values
+    tag: List[Union[None, LinkModel, ObjectModel]] = None
+    updated: Union[None, datetime] = None
+    url: List[Union[None, HttpUrl, LinkModel]] = None
+    to: List[Union[None, LinkModel, ObjectModel]] = None
+    bto: List[Union[None, LinkModel, ObjectModel]] = None
+    cc: List[Union[None, LinkModel, ObjectModel]] = None
+    bcc: List[Union[None, LinkModel, ObjectModel]] = None
+    media_type: Union[None, mime_types] = None
+    duration: Union[None, str] = None  # TODO: Validate the duration string.
 
     # Necessary for ActivityPub but not ActivityStreams
     # Documentation: https://www.w3.org/TR/activitypub/#source-property
-    source: ObjectModel = None
+    source: Union[None, ObjectModel] = None
 
     # Validation
     _object_language_strings = field_validator(
@@ -538,12 +561,12 @@ class PlaceModel(ObjectModel):
     type: Literal["Place"] = "Place"
 
     # Properties
-    accuracy: float = None
-    altitude: float = None
-    longitude: float = None
-    latitude: float = None
-    radius: float = None
-    units: str = None
+    accuracy: Union[None, float] = None
+    altitude: Union[None, float] = None
+    longitude: Union[None, float] = None
+    latitude: Union[None, float] = None
+    radius: Union[None, float] = None
+    units: Union[None, str] = None
 
 
 """
@@ -560,11 +583,11 @@ class CollectionModel(ObjectModel):
     type: str = "Collection"
 
     # Collection properties
-    total_items: int = Field(None, ge=0)
-    current: Union[CollectionPageModel, LinkModel] = None
-    first: Union[CollectionPageModel, LinkModel] = None
-    last: Union[CollectionPageModel, LinkModel] = None
-    items: List[Union[LinkModel, ObjectModel]] = None
+    total_items: Union[None, int] = Field(None, ge=0)
+    current: Union[None, CollectionPageModel, LinkModel] = None
+    first: Union[None, CollectionPageModel, LinkModel] = None
+    last: Union[None, CollectionPageModel, LinkModel] = None
+    items: List[Union[None, LinkModel, ObjectModel]] = None  # May be an empty list
 
     # Validation
     _collection_list_links_or_objects = field_validator("items", mode="before")(
@@ -588,7 +611,9 @@ class OrderedCollectionModel(CollectionModel):
 
     # Properties
     items: None = None  # No items, only orderedItems
-    ordered_items: List[Union[LinkModel, ObjectModel]] = None
+    ordered_items: List[
+        Union[None, LinkModel, ObjectModel]
+    ] = None  # May be an empty list
 
     # Validation
     _orderedcollection_list_links_or_objects = field_validator(
@@ -605,9 +630,9 @@ class CollectionPageModel(CollectionModel):
     type: str = "CollectionPage"
 
     # Properties
-    part_of: Union[LinkModel, CollectionModel] = None
-    next: Union[LinkModel, CollectionPageModel] = None
-    prev: Union[LinkModel, CollectionPageModel] = None
+    part_of: Union[None, LinkModel, CollectionModel] = None
+    next: Union[None, LinkModel, CollectionPageModel] = None  # May not be a next page
+    prev: Union[None, LinkModel, CollectionPageModel] = None  # May not be a prev page
 
     # Validation
     _collectionpage_links_or_collections = field_validator("part_of", mode="before")(
@@ -629,9 +654,11 @@ class OrderedCollectionPageModel(CollectionPageModel):
     type: Literal["OrderedCollectionPage"] = "OrderedCollectionPage"
 
     # Properties
-    start_index: int = Field(None, ge=0)
+    start_index: Union[None, int] = Field(None, ge=0)
     items: None = None  # No items, only orderedItems
-    ordered_items: List[Union[LinkModel, ObjectModel]] = None
+    ordered_items: List[
+        Union[None, LinkModel, ObjectModel]
+    ] = None  # May be an empty list
 
     # Validation
     _orderedcollectionpage_list_links_or_objects = field_validator(
@@ -654,12 +681,12 @@ class ActivityModel(ObjectModel):
     type: str = "Activity"
 
     # Properties
-    actor: List[Union[LinkModel, ObjectModel]] = None
-    object: ObjectModel = None
-    target: List[Union[LinkModel, ObjectModel]] = None
-    result: List[Union[LinkModel, ObjectModel]] = None
-    origin: List[Union[LinkModel, ObjectModel]] = None
-    instrument: List[Union[LinkModel, ObjectModel]] = None
+    actor: List[Union[None, LinkModel, ObjectModel]] = None
+    object: Union[None, ObjectModel] = None
+    target: List[Union[None, LinkModel, ObjectModel]] = None
+    result: List[Union[None, LinkModel, ObjectModel]] = None
+    origin: List[Union[None, LinkModel, ObjectModel]] = None
+    instrument: List[Union[None, LinkModel, ObjectModel]] = None
 
     # Validation
     _activity_objects = field_validator("object", mode="before")(validate_objects)
@@ -683,4 +710,4 @@ class IntransitiveActivityModel(ActivityModel):
     type: str = "IntransitiveActivity"
 
     # Properties
-    object: None = None
+    object: None = None  # No object

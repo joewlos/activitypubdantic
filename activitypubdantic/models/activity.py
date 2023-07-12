@@ -283,10 +283,10 @@ class QuestionModel(IntransitiveActivityModel):
     type: Literal["Question"] = "Question"
 
     # Properties
-    one_of: List[Union[LinkModel, ObjectModel]] = None
-    any_of: List[Union[LinkModel, ObjectModel]] = None
-    closed: Union[bool, datetime, LinkModel, ObjectModel] = None
-    votersCount: int = None  # In Mastodon
+    one_of: List[Union[None, LinkModel, ObjectModel]] = None
+    any_of: List[Union[None, LinkModel, ObjectModel]] = None
+    closed: Union[None, bool, datetime, LinkModel, ObjectModel] = None
+    votersCount: Union[None, int] = None  # In Mastodon
 
     # Validation
     _question_list_of_links_or_objects = field_validator(
