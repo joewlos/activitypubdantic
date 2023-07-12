@@ -14,7 +14,7 @@
 
 ## Why Does ActivityPub JSON Require Validation?
 
-[ActivityPub](https://www.w3.org/TR/activitypub/) is a protocol for decentralized social networking. It defines client-to-server and server-to-server interactions and relies on [ActivityStreams](https://www.w3.org/TR/activitystreams-vocabulary/#dfn-orderedcollection) for its vocabulary. Many of the protocol's definitions are purposefully broad, giving developers the freedom to implement only the features relevant to their products or to adjust to meet their particular requirements.
+[ActivityPub](https://www.w3.org/TR/activitypub/) is a protocol for decentralized social networking. It defines client-to-server and server-to-server interactions and relies on [ActivityStreams](https://www.w3.org/TR/activitystreams-vocabulary/#dfn-orderedcollection) for its vocabulary. Many of the protocol's definitions are purposefully unrestrictive, giving developers the freedom to implement only the features relevant to their products or to adjust to meet their particular requirements.
 
 However, that flexibility presents challenges for assessing data validity and simplifying developers' code. **ActivityPubdantic** helps solve those challenges by using ActivityPub's "type" field to identify proper checks for other fields and standardize their structures. [Examples](#examples) are available in the sections below.
 
@@ -22,13 +22,13 @@ However, that flexibility presents challenges for assessing data validity and si
 
 ## Examples
 
-The following examples present use cases for **ActivityPubdantic** and simple code snippets for those use cases. For a more thorough listing of the package's classes, functions, and models, check out its [documentation](https://www.joewlos.com/activitypubdantic/).
+The following examples present simple use cases and code snippets for **ActivityPubdantic**. For a more thorough listing of **ActivityPubdantic's** classes, functions, and models, check out its [documentation](https://www.joewlos.com/activitypubdantic/).
 
 ### Validating and Parsing Activities
 
 `Activities` are core concepts around which ActivityPub and ActivityStreams are both built. By reducing their complexity and standardizing their representation, **ActivityPubdantic** helps resolve potential pain points for developers.
 
-ActivityPub includes an [example](https://www.w3.org/TR/activitypub/#client-to-server-interactions) of a `Like` activity. The example's `to` field is a list, while the `cc` field is a string. While both formats are valid, they require slightly different handling in subsequent lines of code. After validating this JSON, **ActivityPubdantic** rewrites it, so that those fields are always presented as lists of dictionaries.
+ActivityPub's protocol includes an [example](https://www.w3.org/TR/activitypub/#client-to-server-interactions) of a `Like` activity. The example's `to` field is a list, while its `cc` field is a string. Both formats are valid, but they require slightly different handling in subsequent lines of code. After validating this JSON, **ActivityPubdantic** rewrites it, so that those fields are always presented as lists of dictionaries.
 
 ```python
 import activitypubdantic as ap
@@ -44,11 +44,12 @@ example_json = {
          "https://rhiaro.co.uk/followers/"],
   "cc": "https://e14n.com/evan"
 }
-output_class = ap.get_class(example_json)
-print(output_class.json())
+output_class = ap.get_class(example_json)  # Class is determined by "type" field
+output_json = output_class.json()
+print(output_json)  # See JSON below
 ```
 
-The output JSON is longer and, at first glance, more complex. But because it contains types for each item in its fields and it standardizes the structures of similar fields – like `to` and `cc` – it is more descriptive and easier to manipulate.
+The `output_json` is longer and, at first glance, more complex. But because it contains types for each item in its fields and it standardizes the structures of similar fields – like `to` and `cc` – it is more descriptive and easier to consistently manipulate.
 
 ```json
 {
@@ -96,5 +97,35 @@ The output JSON is longer and, at first glance, more complex. But because it con
     "type": "Object",
     "id": "https://rhiaro.co.uk/2016/05/minimal-activitypub"
   }
+}
+```
+
+However, not every project requires this degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through the URL `id` fields in the JSON.
+
+```python
+short_output_json = output_class.json(verbose=False)
+print(short_output_json)  # See JSON below
+```
+
+A verbosity flag shortens the output, retaining consistency but eliminating potentially unneeded data.
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    {
+      "@language": "en"
+    }
+  ],
+  "type": "Like",
+  "name": "Chris liked 'Minimal ActivityPub update client'",
+  "to": [
+    "https://rhiaro.co.uk/#amy",
+    "https://dustycloud.org/followers",
+    "https://rhiaro.co.uk/followers/"
+  ],
+  "cc": ["https://e14n.com/evan"],
+  "actor": ["https://dustycloud.org/chris/"],
+  "object": "https://rhiaro.co.uk/2016/05/minimal-activitypub"
 }
 ```
