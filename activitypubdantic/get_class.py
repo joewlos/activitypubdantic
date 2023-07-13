@@ -7,6 +7,7 @@ from activitypubdantic.models import *
 from activitypubdantic.get_model import get_model, get_model_data, get_model_json
 
 # Import other packages
+from datetime import datetime
 import json
 from typing import Union
 
@@ -114,11 +115,17 @@ class Link(Base):
     Link data and associated functions.
     """
 
+    # Core type
+    core_type = "Link"
+
 
 class Object(Base):
     """
     Object data and associated functions.
     """
+
+    # Core type
+    core_type = "Object"
 
     def make_public(self):
         """
@@ -127,11 +134,58 @@ class Object(Base):
         self.bto = None
         self.bcc = None
 
+    def create(self):
+        """
+        Produce a new Activity of type Create with this Object.
+        """
+        if self._internal_data() == {}:
+            raise ValueError("Cannot Create an empty Object.")
+        return get_class(
+            {
+                "type": "Create",
+                "object": self._internal_data(),
+                "to": self.to,
+                "bto": self.bto,
+                "cc": self.cc,
+                "bcc": self.bcc,
+                "audience": self.audience,
+                "published": datetime.now(),
+            }
+        )
+
+    def delete(self):
+        """
+        Produce a new Tombstone of this Object.
+        """
+        return get_class(
+            {
+                "type": "Tombstone",
+                "id": self.id,
+                "published": self.published,
+                "updated": datetime.now(),
+                "deleted": datetime.now(),
+            }
+        )
+
 
 class Activity(Object):
     """
     Activity data and associated functions.
     """
+
+    # Core type
+    core_type = "Activity"
+
+    def undo(self):
+        """
+        Produce a new Undo of this Activity.
+        """
+        return get_class(
+            {
+                "type": "Undo",
+                "object": self._internal_data(),
+            }
+        )
 
 
 class Actor(Object):
@@ -139,11 +193,31 @@ class Actor(Object):
     Actor data and associated functions.
     """
 
+    # Core type
+    core_type = "Actor"
+
+    def act(self, action_type: str, object: Object):
+        """
+        Produce a new Activity of the given type with this Actor as the actor
+        and the given Object as the object of the activity.
+        IntransitiveActivity will result in a validation failure.
+        """
+        return get_class(
+            {
+                "type": action_type,
+                "actor": self._internal_data(),
+                "object": object.data(),
+            }
+        )
+
 
 class Collection(Object):
     """
     Collection data and associated functions.
     """
+
+    # Core type
+    core_type = "Collection"
 
 
 """

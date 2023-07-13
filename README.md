@@ -46,7 +46,7 @@ The following examples include simple use cases and code snippets for **Activity
 
 `Activities`, `Collections`, `Links`, and `Objects` are the core concepts around which ActivityPub and ActivityStreams are built. By reducing their complexity and standardizing their representation, **ActivityPubdantic** helps resolve potential pain points for developers.
 
-ActivityPub's protocol includes an [example](https://www.w3.org/TR/activitypub/#client-to-server-interactions) of a `Like` activity. The example's `to` field is a list, while its `cc` field is a string. Both formats are valid, but they require slightly different handling in subsequent lines of code. To resolve that difference, after validating this JSON, **ActivityPubdantic** rewrites it, so those fields are always presented as lists of dictionaries.
+ActivityPub's protocol includes an [example](https://www.w3.org/TR/activitypub/#client-to-server-interactions) of a `Like` activity. The example's `to` field is a list, while its `cc` field is a string. Both formats are valid, but they require slightly different handling in subsequent lines of code. To resolve that difference, **ActivityPubdantic** rewrites it, so those fields are always presented as lists of dictionaries.
 
 ```python
 import activitypubdantic as ap
@@ -195,7 +195,7 @@ As demonstrated in the earlier example, class functions – like `make_public()`
 
 ## Contributing
 
-**ActivityPubdantic** is still a work in progress. If you find it valuable for your project but notice bugs, need changes, or require additional features or support for other ActivityPub platforms, [open an issue](https://github.com/joewlos/activitypubdantic/issues) or fork and [start a PR](https://github.com/joewlos/activitypubdantic/pulls).
+**ActivityPubdantic** is still a work in progress. If you find it valuable for your project but notice bugs, need changes, or require additional features or support for other ActivityPub platforms, [open an issue](https://github.com/joewlos/activitypubdantic/issues) or fork to [start a PR](https://github.com/joewlos/activitypubdantic/pulls).
 
 The `developer_requirements.txt` file in the repository includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
 

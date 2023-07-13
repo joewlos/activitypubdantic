@@ -333,6 +333,17 @@ def validate_collections(v):
         return v
 
 
+# Validate list of Collections
+def validate_list_collections(v):
+    v = _must_be_list(v)
+    for i, item in enumerate(v):
+        if item:
+            v[i] = _must_be_collections(item)
+        else:
+            v.pop(i)
+    return v if v else None
+
+
 # Validate Places
 def validate_places(v):
     if v:
@@ -498,6 +509,7 @@ class ObjectModel(CoreModel):
     summary_map: Union[
         None, dict
     ] = None  # Dictionary of language keys and summary values
+    shares: Union[None, ObjectModel] = None  # Collection in ActivityPub
     tag: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
     updated: Union[None, datetime] = None
     url: Union[None, List[Union[None, HttpUrl, LinkModel]]] = None
@@ -520,7 +532,7 @@ class ObjectModel(CoreModel):
     _object_list_links_or_images = field_validator("image", "icon", mode="before")(
         validate_list_links_or_images
     )
-    _object_collections = field_validator("replies", mode="before")(
+    _object_collections = field_validator("replies", "shares", mode="before")(
         validate_collections
     )
     _object_places = field_validator("location", mode="before")(validate_places)

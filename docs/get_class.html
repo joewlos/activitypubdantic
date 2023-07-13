@@ -36,6 +36,7 @@ from activitypubdantic.models import *
 from activitypubdantic.get_model import get_model, get_model_data, get_model_json
 
 # Import other packages
+from datetime import datetime
 import json
 from typing import Union
 
@@ -143,11 +144,17 @@ class Link(Base):
     Link data and associated functions.
     &#34;&#34;&#34;
 
+    # Core type
+    core_type = &#34;Link&#34;
+
 
 class Object(Base):
     &#34;&#34;&#34;
     Object data and associated functions.
     &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Object&#34;
 
     def make_public(self):
         &#34;&#34;&#34;
@@ -156,11 +163,58 @@ class Object(Base):
         self.bto = None
         self.bcc = None
 
+    def create(self):
+        &#34;&#34;&#34;
+        Produce a new Activity of type Create with this Object.
+        &#34;&#34;&#34;
+        if self._internal_data() == {}:
+            raise ValueError(&#34;Cannot Create an empty Object.&#34;)
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Create&#34;,
+                &#34;object&#34;: self._internal_data(),
+                &#34;to&#34;: self.to,
+                &#34;bto&#34;: self.bto,
+                &#34;cc&#34;: self.cc,
+                &#34;bcc&#34;: self.bcc,
+                &#34;audience&#34;: self.audience,
+                &#34;published&#34;: datetime.now(),
+            }
+        )
+
+    def delete(self):
+        &#34;&#34;&#34;
+        Produce a new Tombstone of this Object.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Tombstone&#34;,
+                &#34;id&#34;: self.id,
+                &#34;published&#34;: self.published,
+                &#34;updated&#34;: datetime.now(),
+                &#34;deleted&#34;: datetime.now(),
+            }
+        )
+
 
 class Activity(Object):
     &#34;&#34;&#34;
     Activity data and associated functions.
     &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Activity&#34;
+
+    def undo(self):
+        &#34;&#34;&#34;
+        Produce a new Undo of this Activity.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Undo&#34;,
+                &#34;object&#34;: self._internal_data(),
+            }
+        )
 
 
 class Actor(Object):
@@ -168,11 +222,31 @@ class Actor(Object):
     Actor data and associated functions.
     &#34;&#34;&#34;
 
+    # Core type
+    core_type = &#34;Actor&#34;
+
+    def act(self, action_type: str, object: Object):
+        &#34;&#34;&#34;
+        Produce a new Activity of the given type with this Actor as the actor
+        and the given Object as the object of the activity.
+        IntransitiveActivity will result in a validation failure.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: action_type,
+                &#34;actor&#34;: self._internal_data(),
+                &#34;object&#34;: object.data(),
+            }
+        )
+
 
 class Collection(Object):
     &#34;&#34;&#34;
     Collection data and associated functions.
     &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Collection&#34;
 
 
 &#34;&#34;&#34;
@@ -357,18 +431,65 @@ This function assumes any input is a Pydantic model, with no further validation 
 <pre><code class="python">class Activity(Object):
     &#34;&#34;&#34;
     Activity data and associated functions.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Activity&#34;
+
+    def undo(self):
+        &#34;&#34;&#34;
+        Produce a new Undo of this Activity.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Undo&#34;,
+                &#34;object&#34;: self._internal_data(),
+            }
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Activity.core_type"><code class="name">var <span class="ident">core_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Activity.undo"><code class="name flex">
+<span>def <span class="ident">undo</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produce a new Undo of this Activity.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def undo(self):
+    &#34;&#34;&#34;
+    Produce a new Undo of this Activity.
+    &#34;&#34;&#34;
+    return get_class(
+        {
+            &#34;type&#34;: &#34;Undo&#34;,
+            &#34;object&#34;: self._internal_data(),
+        }
+    )</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
 <ul class="hlist">
+<li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
@@ -388,18 +509,73 @@ This function assumes any input is a Pydantic model, with no further validation 
 <pre><code class="python">class Actor(Object):
     &#34;&#34;&#34;
     Actor data and associated functions.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Actor&#34;
+
+    def act(self, action_type: str, object: Object):
+        &#34;&#34;&#34;
+        Produce a new Activity of the given type with this Actor as the actor
+        and the given Object as the object of the activity.
+        IntransitiveActivity will result in a validation failure.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: action_type,
+                &#34;actor&#34;: self._internal_data(),
+                &#34;object&#34;: object.data(),
+            }
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Actor.core_type"><code class="name">var <span class="ident">core_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Actor.act"><code class="name flex">
+<span>def <span class="ident">act</span></span>(<span>self, action_type: str, object: <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produce a new Activity of the given type with this Actor as the actor
+and the given Object as the object of the activity.
+IntransitiveActivity will result in a validation failure.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def act(self, action_type: str, object: Object):
+    &#34;&#34;&#34;
+    Produce a new Activity of the given type with this Actor as the actor
+    and the given Object as the object of the activity.
+    IntransitiveActivity will result in a validation failure.
+    &#34;&#34;&#34;
+    return get_class(
+        {
+            &#34;type&#34;: action_type,
+            &#34;actor&#34;: self._internal_data(),
+            &#34;object&#34;: object.data(),
+        }
+    )</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
 <ul class="hlist">
+<li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
@@ -572,18 +748,30 @@ This function assumes any input is a Pydantic model, with no further validation 
 <pre><code class="python">class Collection(Object):
     &#34;&#34;&#34;
     Collection data and associated functions.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Collection&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Collection.core_type"><code class="name">var <span class="ident">core_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
 <ul class="hlist">
+<li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
@@ -603,12 +791,22 @@ This function assumes any input is a Pydantic model, with no further validation 
 <pre><code class="python">class Link(Base):
     &#34;&#34;&#34;
     Link data and associated functions.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    # Core type
+    core_type = &#34;Link&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Link.core_type"><code class="name">var <span class="ident">core_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></b></code>:
@@ -634,12 +832,48 @@ This function assumes any input is a Pydantic model, with no further validation 
     Object data and associated functions.
     &#34;&#34;&#34;
 
+    # Core type
+    core_type = &#34;Object&#34;
+
     def make_public(self):
         &#34;&#34;&#34;
         Remove any fields (bto and bcc) that should not be public.
         &#34;&#34;&#34;
         self.bto = None
-        self.bcc = None</code></pre>
+        self.bcc = None
+
+    def create(self):
+        &#34;&#34;&#34;
+        Produce a new Activity of type Create with this Object.
+        &#34;&#34;&#34;
+        if self._internal_data() == {}:
+            raise ValueError(&#34;Cannot Create an empty Object.&#34;)
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Create&#34;,
+                &#34;object&#34;: self._internal_data(),
+                &#34;to&#34;: self.to,
+                &#34;bto&#34;: self.bto,
+                &#34;cc&#34;: self.cc,
+                &#34;bcc&#34;: self.bcc,
+                &#34;audience&#34;: self.audience,
+                &#34;published&#34;: datetime.now(),
+            }
+        )
+
+    def delete(self):
+        &#34;&#34;&#34;
+        Produce a new Tombstone of this Object.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Tombstone&#34;,
+                &#34;id&#34;: self.id,
+                &#34;published&#34;: self.published,
+                &#34;updated&#34;: datetime.now(),
+                &#34;deleted&#34;: datetime.now(),
+            }
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -651,8 +885,68 @@ This function assumes any input is a Pydantic model, with no further validation 
 <li><a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a></li>
 <li><a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Object.core_type"><code class="name">var <span class="ident">core_type</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
+<dt id="activitypubdantic.get_class.Object.create"><code class="name flex">
+<span>def <span class="ident">create</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produce a new Activity of type Create with this Object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create(self):
+    &#34;&#34;&#34;
+    Produce a new Activity of type Create with this Object.
+    &#34;&#34;&#34;
+    if self._internal_data() == {}:
+        raise ValueError(&#34;Cannot Create an empty Object.&#34;)
+    return get_class(
+        {
+            &#34;type&#34;: &#34;Create&#34;,
+            &#34;object&#34;: self._internal_data(),
+            &#34;to&#34;: self.to,
+            &#34;bto&#34;: self.bto,
+            &#34;cc&#34;: self.cc,
+            &#34;bcc&#34;: self.bcc,
+            &#34;audience&#34;: self.audience,
+            &#34;published&#34;: datetime.now(),
+        }
+    )</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.get_class.Object.delete"><code class="name flex">
+<span>def <span class="ident">delete</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produce a new Tombstone of this Object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete(self):
+    &#34;&#34;&#34;
+    Produce a new Tombstone of this Object.
+    &#34;&#34;&#34;
+    return get_class(
+        {
+            &#34;type&#34;: &#34;Tombstone&#34;,
+            &#34;id&#34;: self.id,
+            &#34;published&#34;: self.published,
+            &#34;updated&#34;: datetime.now(),
+            &#34;deleted&#34;: datetime.now(),
+        }
+    )</code></pre>
+</details>
+</dd>
 <dt id="activitypubdantic.get_class.Object.make_public"><code class="name flex">
 <span>def <span class="ident">make_public</span></span>(<span>self)</span>
 </code></dt>
@@ -705,9 +999,17 @@ This function assumes any input is a Pydantic model, with no further validation 
 <ul>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Activity" href="#activitypubdantic.get_class.Activity">Activity</a></code></h4>
+<ul class="">
+<li><code><a title="activitypubdantic.get_class.Activity.core_type" href="#activitypubdantic.get_class.Activity.core_type">core_type</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Activity.undo" href="#activitypubdantic.get_class.Activity.undo">undo</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a></code></h4>
+<ul class="">
+<li><code><a title="activitypubdantic.get_class.Actor.act" href="#activitypubdantic.get_class.Actor.act">act</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Actor.core_type" href="#activitypubdantic.get_class.Actor.core_type">core_type</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></code></h4>
@@ -718,13 +1020,22 @@ This function assumes any input is a Pydantic model, with no further validation 
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a></code></h4>
+<ul class="">
+<li><code><a title="activitypubdantic.get_class.Collection.core_type" href="#activitypubdantic.get_class.Collection.core_type">core_type</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Link" href="#activitypubdantic.get_class.Link">Link</a></code></h4>
+<ul class="">
+<li><code><a title="activitypubdantic.get_class.Link.core_type" href="#activitypubdantic.get_class.Link.core_type">core_type</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></code></h4>
 <ul class="">
+<li><code><a title="activitypubdantic.get_class.Object.core_type" href="#activitypubdantic.get_class.Object.core_type">core_type</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
 </li>
