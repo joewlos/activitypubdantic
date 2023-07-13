@@ -7,8 +7,8 @@ The Pydantic models may be used independently of the functions and classes to va
 in your own custom functions, classes, or FastAPI routes. \n
 The ActivityPub protocol is cited throughout this documentation and is available here: 
 https://www.w3.org/TR/activitypub/ \n
-The GitHub repo containing this project, which includes examples and licensing information
-and is open to PRs, is available here: https://github.com/joewlos/activitypubdantic
+The GitHub repo containing this project, which includes examples and licensing information,
+is available here: https://github.com/joewlos/activitypubdantic
 """
 from activitypubdantic.get_class import get_class, get_class_from_model
 from activitypubdantic.get_model import get_model, get_model_data, get_model_json

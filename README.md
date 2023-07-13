@@ -161,7 +161,7 @@ Setting `verbose=False` shortens the output, retaining consistency but eliminati
 
 [FastAPI](https://fastapi.tiangolo.com/) uses Pydantic models to validate [request bodies](https://fastapi.tiangolo.com/tutorial/body/). After importing **ActivityPubdantic** models directly, developers can automatically validate requests and then use the `get_class_from_model()` function to smoothly interact with the ActivityPub JSON.
 
-In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the request body is validated by FastAPI and loaded into an **ActivityPubdantic** class to produce clean JSON.
+When the same `Like` activity is sent in the POST request to `/outbox`, the request body is validated by FastAPI and loaded into an **ActivityPubdantic** class to produce clean JSON.
 
 ```python
 import activitypubdantic as ap
@@ -178,7 +178,7 @@ async def outbox(activity: ActivityModel, response: Response):
     activity_class = ap.get_class_from_model(activity)
     activity_class.make_public()
 
-    # Save this JSON in this user's outbox collection in the database
+    # Save the JSON in this user's outbox collection in the database
     print(activity_class.json())
 
     # Use the class's type to set the header
@@ -187,8 +187,16 @@ async def outbox(activity: ActivityModel, response: Response):
         1,  # ID should come from the database
     )
 
-    # Return the data
-    return {"message": "Submitted to Outbox"}
+    # Return with header and status code
+    return
 ```
 
 As demonstrated in the earlier example, class functions – like `make_public()` – perform common operations on the data. Additionally, the class is used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
+
+## Contributing
+
+**ActivityPubdantic** is still a work in progress. If you find it valuable for your project but notice bugs, need changes, or require additional features or support for other ActivityPub platforms, [open an issue](https://github.com/joewlos/activitypubdantic/issues) or fork and [start a PR](https://github.com/joewlos/activitypubdantic/pulls).
+
+The `requirements.txt` file in the repository includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
+
+Thank you for your interest!
