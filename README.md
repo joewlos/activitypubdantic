@@ -136,7 +136,7 @@ A verbosity flag shortens the output, retaining consistency but eliminating unne
 
 [FastAPI](https://fastapi.tiangolo.com/) uses Pydantic models to validate [request bodies](https://fastapi.tiangolo.com/tutorial/body/). After importing **ActivityPubdantic** models directly, developers can automatically validate requests and then use the `get_class_from_model()` function to smoothly interact with the ActivityPub JSON.
 
-In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the request body is validated by FastAPI, loaded into an **ActivityPubdantic** class to produce clean JSON, and used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
+In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the request body is validated by FastAPI and loaded into an **ActivityPubdantic** class to produce clean JSON.
 
 ```python
 import activitypubdantic as ap
@@ -148,6 +148,7 @@ app = FastAPI()
 @app.post("/outbox", status_code=201)
 async def outbox(activity: ActivityModel, response: Response):
     activity_class = ap.get_class_from_model(activity)
+    activity_class.make_public()  # Remove bto and bcc fields
     print(activity_class.json())  # Save this JSON in the database
     response.headers["Location"] = "https://example.com/{0}/{1}".format(
         activity_class.type.lower(),  # Use the type to help generate the returned location
@@ -155,3 +156,5 @@ async def outbox(activity: ActivityModel, response: Response):
     )
     return {"message": "Submitted to Outbox"}
 ```
+
+The class functions – like `make_public()` – perform common operations on the data. Additionally, the class is used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.

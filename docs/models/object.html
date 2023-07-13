@@ -64,9 +64,9 @@ class RelationshipModel(ObjectModel):
     type: Literal[&#34;Relationship&#34;] = &#34;Relationship&#34;
 
     # Properties
-    subject: List[Union[None, LinkModel, ObjectModel]] = None
-    object: List[Union[None, LinkModel, ObjectModel]] = None
-    relationship: List[Union[None, ObjectModel]] = None
+    subject: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    object: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    relationship: Union[None, List[Union[None, ObjectModel]]] = None
 
     # Validators
     _relationship_list_links_or_objects = field_validator(
@@ -464,9 +464,9 @@ allow <code>self</code> as a field name.</p></div>
     type: Literal[&#34;Relationship&#34;] = &#34;Relationship&#34;
 
     # Properties
-    subject: List[Union[None, LinkModel, ObjectModel]] = None
-    object: List[Union[None, LinkModel, ObjectModel]] = None
-    relationship: List[Union[None, ObjectModel]] = None
+    subject: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    object: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    relationship: Union[None, List[Union[None, ObjectModel]]] = None
 
     # Validators
     _relationship_list_links_or_objects = field_validator(
@@ -492,15 +492,15 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.RelationshipModel.object"><code class="name">var <span class="ident">object</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.object.RelationshipModel.object"><code class="name">var <span class="ident">object</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.RelationshipModel.relationship"><code class="name">var <span class="ident">relationship</span> : List[Optional[None]]</code></dt>
+<dt id="activitypubdantic.models.object.RelationshipModel.relationship"><code class="name">var <span class="ident">relationship</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.object.RelationshipModel.subject"><code class="name">var <span class="ident">subject</span> : List[Union[None, <a title="activitypubdantic.models.core.LinkModel" href="core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>]]</code></dt>
+<dt id="activitypubdantic.models.object.RelationshipModel.subject"><code class="name">var <span class="ident">subject</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>

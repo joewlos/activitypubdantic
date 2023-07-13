@@ -34,9 +34,9 @@ class RelationshipModel(ObjectModel):
     type: Literal["Relationship"] = "Relationship"
 
     # Properties
-    subject: List[Union[None, LinkModel, ObjectModel]] = None
-    object: List[Union[None, LinkModel, ObjectModel]] = None
-    relationship: List[Union[None, ObjectModel]] = None
+    subject: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    object: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    relationship: Union[None, List[Union[None, ObjectModel]]] = None
 
     # Validators
     _relationship_list_links_or_objects = field_validator(

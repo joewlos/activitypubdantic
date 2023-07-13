@@ -47,7 +47,7 @@ def validate_list_collections(v):
             v[i] = _must_be_collections(item)
         else:
             v.pop(i)
-    return v
+    return v if v else None
 
 
 # Validate ordered Collections
@@ -100,7 +100,7 @@ class ActorModel(ObjectModel):
     following: Union[None, ObjectModel] = None
     followers: Union[None, ObjectModel] = None
     liked: Union[None, ObjectModel] = None
-    streams: List[Union[None, ObjectModel]] = None
+    streams: Union[None, List[Union[None, ObjectModel]]] = None
     endpoints: Union[None, HttpUrl, EndpointsModel] = None
 
     # Validation

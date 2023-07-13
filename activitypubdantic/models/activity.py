@@ -283,8 +283,8 @@ class QuestionModel(IntransitiveActivityModel):
     type: Literal["Question"] = "Question"
 
     # Properties
-    one_of: List[Union[None, LinkModel, ObjectModel]] = None
-    any_of: List[Union[None, LinkModel, ObjectModel]] = None
+    one_of: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
+    any_of: Union[None, List[Union[None, LinkModel, ObjectModel]]] = None
     closed: Union[None, bool, datetime, LinkModel, ObjectModel] = None
     votersCount: Union[None, int] = None  # In Mastodon
 

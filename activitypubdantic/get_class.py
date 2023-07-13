@@ -40,13 +40,13 @@ class Base:
         model: Union[
             ActivityModel, ActorModel, CollectionModel, LinkModel, ObjectModel
         ],
-        input_json: Union[dict, list],
+        input_json: dict,  # TODO: There's no way this could be a list, right?
         default_languages: list = _DEFAULT_LANGUAGES,
     ):
         self.model = model
         self.input_json = input_json
         self._data = self.data(
-            exclude_none=False, by_alias=False
+            exclude_none=False, by_alias=False, use_input_json=True
         )  # Use underscore to avoid conflict with data() function
 
         # For each key,value pair in the input_json, set the class attribute
@@ -62,17 +62,28 @@ class Base:
                         setattr(self, v, self._data[k][language])
                         break
 
+    def _internal_data(self):
+        """
+        Get the internal data dictionary of unprotected and not null fields.
+        """
+        clean_data = {}
+        for k, v in self.__dict__.items():
+            if k not in _DEFAULT_PROTECTED_FIELDS and v:
+                clean_data[k] = v
+        return clean_data
+
     def data(
         self,
         by_alias: bool = True,
         exclude_none: bool = True,
         verbose: bool = True,
+        use_input_json: bool = False,
     ):
         """
         Return the class input_json as a Python dictionary or list with settings.
         """
         return get_model_data(
-            self.input_json,
+            self.input_json if use_input_json else self._internal_data(),
             by_alias=by_alias,
             exclude_none=exclude_none,
             verbose=verbose,
@@ -84,35 +95,18 @@ class Base:
         exclude_none: bool = True,
         verbose: bool = True,
         indent: int = 2,
+        use_input_json: bool = False,
     ):
         """
         Return the class input_json as a JSON string with settings.
         """
         return get_model_json(
-            self.input_json,
+            self.input_json if use_input_json else self._internal_data(),
             by_alias=by_alias,
             exclude_none=exclude_none,
             verbose=verbose,
             indent=indent,
         )
-
-
-class Activity(Base):
-    """
-    Activity data and associated functions.
-    """
-
-
-class Actor(Base):
-    """
-    Actor data and associated functions.
-    """
-
-
-class Collection(Base):
-    """
-    Collection data and associated functions.
-    """
 
 
 class Link(Base):
@@ -124,6 +118,31 @@ class Link(Base):
 class Object(Base):
     """
     Object data and associated functions.
+    """
+
+    def make_public(self):
+        """
+        Remove any fields (bto and bcc) that should not be public.
+        """
+        self.bto = None
+        self.bcc = None
+
+
+class Activity(Object):
+    """
+    Activity data and associated functions.
+    """
+
+
+class Actor(Object):
+    """
+    Actor data and associated functions.
+    """
+
+
+class Collection(Object):
+    """
+    Collection data and associated functions.
     """
 
 
@@ -197,7 +216,7 @@ FUNCTIONS
 
 
 def get_class(
-    input_json: Union[dict, str, list]  # If string, assume it is JSON
+    input_json: Union[dict, str]  # If string, assume it is JSON
 ) -> Union[Activity, Actor, Collection, Link, Object]:
     """
     Get a class for manipulating the input ActivityPub JSON.

@@ -77,7 +77,7 @@ def validate_list_collections(v):
             v[i] = _must_be_collections(item)
         else:
             v.pop(i)
-    return v
+    return v if v else None
 
 
 # Validate ordered Collections
@@ -120,8 +120,8 @@ class ActorModel(ObjectModel):
     ActivityPub adds properties: https://www.w3.org/TR/activitypub/#actors
     &#34;&#34;&#34;
 
-    # Type does not need to be literal for propogation
-    type: str = &#34;Actor&#34;
+    # Type
+    type: Literal[&#34;Actor&#34;] = &#34;Actor&#34;
 
     # Properties
     preferred_username: str = None
@@ -130,7 +130,7 @@ class ActorModel(ObjectModel):
     following: Union[None, ObjectModel] = None
     followers: Union[None, ObjectModel] = None
     liked: Union[None, ObjectModel] = None
-    streams: List[Union[None, ObjectModel]] = None
+    streams: Union[None, List[Union[None, ObjectModel]]] = None
     endpoints: Union[None, HttpUrl, EndpointsModel] = None
 
     # Validation
@@ -233,7 +233,7 @@ class ServiceModel(ActorModel):
             v[i] = _must_be_collections(item)
         else:
             v.pop(i)
-    return v</code></pre>
+    return v if v else None</code></pre>
 </details>
 </dd>
 <dt id="activitypubdantic.models.actor.validate_ordered_collections"><code class="name flex">
@@ -275,8 +275,8 @@ allow <code>self</code> as a field name.</p></div>
     ActivityPub adds properties: https://www.w3.org/TR/activitypub/#actors
     &#34;&#34;&#34;
 
-    # Type does not need to be literal for propogation
-    type: str = &#34;Actor&#34;
+    # Type
+    type: Literal[&#34;Actor&#34;] = &#34;Actor&#34;
 
     # Properties
     preferred_username: str = None
@@ -285,7 +285,7 @@ allow <code>self</code> as a field name.</p></div>
     following: Union[None, ObjectModel] = None
     followers: Union[None, ObjectModel] = None
     liked: Union[None, ObjectModel] = None
-    streams: List[Union[None, ObjectModel]] = None
+    streams: Union[None, List[Union[None, ObjectModel]]] = None
     endpoints: Union[None, HttpUrl, EndpointsModel] = None
 
     # Validation
@@ -354,11 +354,11 @@ allow <code>self</code> as a field name.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.ActorModel.streams"><code class="name">var <span class="ident">streams</span> : List[Optional[None]]</code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.streams"><code class="name">var <span class="ident">streams</span> : Optional[None]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="activitypubdantic.models.actor.ActorModel.type"><code class="name">var <span class="ident">type</span> : str</code></dt>
+<dt id="activitypubdantic.models.actor.ActorModel.type"><code class="name">var <span class="ident">type</span> : Literal['Actor']</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>

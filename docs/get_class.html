@@ -69,13 +69,13 @@ class Base:
         model: Union[
             ActivityModel, ActorModel, CollectionModel, LinkModel, ObjectModel
         ],
-        input_json: Union[dict, list],
+        input_json: dict,  # TODO: There&#39;s no way this could be a list, right?
         default_languages: list = _DEFAULT_LANGUAGES,
     ):
         self.model = model
         self.input_json = input_json
         self._data = self.data(
-            exclude_none=False, by_alias=False
+            exclude_none=False, by_alias=False, use_input_json=True
         )  # Use underscore to avoid conflict with data() function
 
         # For each key,value pair in the input_json, set the class attribute
@@ -91,17 +91,28 @@ class Base:
                         setattr(self, v, self._data[k][language])
                         break
 
+    def _internal_data(self):
+        &#34;&#34;&#34;
+        Get the internal data dictionary of unprotected and not null fields.
+        &#34;&#34;&#34;
+        clean_data = {}
+        for k, v in self.__dict__.items():
+            if k not in _DEFAULT_PROTECTED_FIELDS and v:
+                clean_data[k] = v
+        return clean_data
+
     def data(
         self,
         by_alias: bool = True,
         exclude_none: bool = True,
         verbose: bool = True,
+        use_input_json: bool = False,
     ):
         &#34;&#34;&#34;
         Return the class input_json as a Python dictionary or list with settings.
         &#34;&#34;&#34;
         return get_model_data(
-            self.input_json,
+            self.input_json if use_input_json else self._internal_data(),
             by_alias=by_alias,
             exclude_none=exclude_none,
             verbose=verbose,
@@ -113,35 +124,18 @@ class Base:
         exclude_none: bool = True,
         verbose: bool = True,
         indent: int = 2,
+        use_input_json: bool = False,
     ):
         &#34;&#34;&#34;
         Return the class input_json as a JSON string with settings.
         &#34;&#34;&#34;
         return get_model_json(
-            self.input_json,
+            self.input_json if use_input_json else self._internal_data(),
             by_alias=by_alias,
             exclude_none=exclude_none,
             verbose=verbose,
             indent=indent,
         )
-
-
-class Activity(Base):
-    &#34;&#34;&#34;
-    Activity data and associated functions.
-    &#34;&#34;&#34;
-
-
-class Actor(Base):
-    &#34;&#34;&#34;
-    Actor data and associated functions.
-    &#34;&#34;&#34;
-
-
-class Collection(Base):
-    &#34;&#34;&#34;
-    Collection data and associated functions.
-    &#34;&#34;&#34;
 
 
 class Link(Base):
@@ -153,6 +147,31 @@ class Link(Base):
 class Object(Base):
     &#34;&#34;&#34;
     Object data and associated functions.
+    &#34;&#34;&#34;
+
+    def make_public(self):
+        &#34;&#34;&#34;
+        Remove any fields (bto and bcc) that should not be public.
+        &#34;&#34;&#34;
+        self.bto = None
+        self.bcc = None
+
+
+class Activity(Object):
+    &#34;&#34;&#34;
+    Activity data and associated functions.
+    &#34;&#34;&#34;
+
+
+class Actor(Object):
+    &#34;&#34;&#34;
+    Actor data and associated functions.
+    &#34;&#34;&#34;
+
+
+class Collection(Object):
+    &#34;&#34;&#34;
+    Collection data and associated functions.
     &#34;&#34;&#34;
 
 
@@ -226,7 +245,7 @@ FUNCTIONS
 
 
 def get_class(
-    input_json: Union[dict, str, list]  # If string, assume it is JSON
+    input_json: Union[dict, str]  # If string, assume it is JSON
 ) -&gt; Union[Activity, Actor, Collection, Link, Object]:
     &#34;&#34;&#34;
     Get a class for manipulating the input ActivityPub JSON.
@@ -267,7 +286,7 @@ def get_class_from_model(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="activitypubdantic.get_class.get_class"><code class="name flex">
-<span>def <span class="ident">get_class</span></span>(<span>input_json: Union[dict, str, list]) ‑> Union[<a title="activitypubdantic.get_class.Activity" href="#activitypubdantic.get_class.Activity">Activity</a>, <a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a>, <a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a>, <a title="activitypubdantic.get_class.Link" href="#activitypubdantic.get_class.Link">Link</a>, <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a>]</span>
+<span>def <span class="ident">get_class</span></span>(<span>input_json: Union[dict, str]) ‑> Union[<a title="activitypubdantic.get_class.Activity" href="#activitypubdantic.get_class.Activity">Activity</a>, <a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a>, <a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a>, <a title="activitypubdantic.get_class.Link" href="#activitypubdantic.get_class.Link">Link</a>, <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a class for manipulating the input ActivityPub JSON.
@@ -277,7 +296,7 @@ This function assumes any input string is JSON and parses it.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_class(
-    input_json: Union[dict, str, list]  # If string, assume it is JSON
+    input_json: Union[dict, str]  # If string, assume it is JSON
 ) -&gt; Union[Activity, Actor, Collection, Link, Object]:
     &#34;&#34;&#34;
     Get a class for manipulating the input ActivityPub JSON.
@@ -327,7 +346,7 @@ This function assumes any input is a Pydantic model, with no further validation 
 <dl>
 <dt id="activitypubdantic.get_class.Activity"><code class="flex name class">
 <span>class <span class="ident">Activity</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: dict, default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Activity data and associated functions.</p></div>
@@ -335,28 +354,30 @@ This function assumes any input is a Pydantic model, with no further validation 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Activity(Base):
+<pre><code class="python">class Activity(Object):
     &#34;&#34;&#34;
     Activity data and associated functions.
     &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></b></code>:
+<li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
 <ul class="hlist">
-<li><code><a title="activitypubdantic.get_class.Base.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
-<li><code><a title="activitypubdantic.get_class.Base.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="activitypubdantic.get_class.Actor"><code class="flex name class">
 <span>class <span class="ident">Actor</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: dict, default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Actor data and associated functions.</p></div>
@@ -364,28 +385,30 @@ This function assumes any input is a Pydantic model, with no further validation 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Actor(Base):
+<pre><code class="python">class Actor(Object):
     &#34;&#34;&#34;
     Actor data and associated functions.
     &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></b></code>:
+<li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
 <ul class="hlist">
-<li><code><a title="activitypubdantic.get_class.Base.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
-<li><code><a title="activitypubdantic.get_class.Base.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="activitypubdantic.get_class.Base"><code class="flex name class">
 <span>class <span class="ident">Base</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: dict, default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base extends default functions to all other classes.</p></div>
@@ -403,13 +426,13 @@ This function assumes any input is a Pydantic model, with no further validation 
         model: Union[
             ActivityModel, ActorModel, CollectionModel, LinkModel, ObjectModel
         ],
-        input_json: Union[dict, list],
+        input_json: dict,  # TODO: There&#39;s no way this could be a list, right?
         default_languages: list = _DEFAULT_LANGUAGES,
     ):
         self.model = model
         self.input_json = input_json
         self._data = self.data(
-            exclude_none=False, by_alias=False
+            exclude_none=False, by_alias=False, use_input_json=True
         )  # Use underscore to avoid conflict with data() function
 
         # For each key,value pair in the input_json, set the class attribute
@@ -425,17 +448,28 @@ This function assumes any input is a Pydantic model, with no further validation 
                         setattr(self, v, self._data[k][language])
                         break
 
+    def _internal_data(self):
+        &#34;&#34;&#34;
+        Get the internal data dictionary of unprotected and not null fields.
+        &#34;&#34;&#34;
+        clean_data = {}
+        for k, v in self.__dict__.items():
+            if k not in _DEFAULT_PROTECTED_FIELDS and v:
+                clean_data[k] = v
+        return clean_data
+
     def data(
         self,
         by_alias: bool = True,
         exclude_none: bool = True,
         verbose: bool = True,
+        use_input_json: bool = False,
     ):
         &#34;&#34;&#34;
         Return the class input_json as a Python dictionary or list with settings.
         &#34;&#34;&#34;
         return get_model_data(
-            self.input_json,
+            self.input_json if use_input_json else self._internal_data(),
             by_alias=by_alias,
             exclude_none=exclude_none,
             verbose=verbose,
@@ -447,12 +481,13 @@ This function assumes any input is a Pydantic model, with no further validation 
         exclude_none: bool = True,
         verbose: bool = True,
         indent: int = 2,
+        use_input_json: bool = False,
     ):
         &#34;&#34;&#34;
         Return the class input_json as a JSON string with settings.
         &#34;&#34;&#34;
         return get_model_json(
-            self.input_json,
+            self.input_json if use_input_json else self._internal_data(),
             by_alias=by_alias,
             exclude_none=exclude_none,
             verbose=verbose,
@@ -461,16 +496,13 @@ This function assumes any input is a Pydantic model, with no further validation 
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="activitypubdantic.get_class.Activity" href="#activitypubdantic.get_class.Activity">Activity</a></li>
-<li><a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a></li>
-<li><a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a></li>
 <li><a title="activitypubdantic.get_class.Link" href="#activitypubdantic.get_class.Link">Link</a></li>
 <li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="activitypubdantic.get_class.Base.data"><code class="name flex">
-<span>def <span class="ident">data</span></span>(<span>self, by_alias: bool = True, exclude_none: bool = True, verbose: bool = True)</span>
+<span>def <span class="ident">data</span></span>(<span>self, by_alias: bool = True, exclude_none: bool = True, verbose: bool = True, use_input_json: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the class input_json as a Python dictionary or list with settings.</p></div>
@@ -483,12 +515,13 @@ This function assumes any input is a Pydantic model, with no further validation 
     by_alias: bool = True,
     exclude_none: bool = True,
     verbose: bool = True,
+    use_input_json: bool = False,
 ):
     &#34;&#34;&#34;
     Return the class input_json as a Python dictionary or list with settings.
     &#34;&#34;&#34;
     return get_model_data(
-        self.input_json,
+        self.input_json if use_input_json else self._internal_data(),
         by_alias=by_alias,
         exclude_none=exclude_none,
         verbose=verbose,
@@ -496,7 +529,7 @@ This function assumes any input is a Pydantic model, with no further validation 
 </details>
 </dd>
 <dt id="activitypubdantic.get_class.Base.json"><code class="name flex">
-<span>def <span class="ident">json</span></span>(<span>self, by_alias: bool = True, exclude_none: bool = True, verbose: bool = True, indent: int = 2)</span>
+<span>def <span class="ident">json</span></span>(<span>self, by_alias: bool = True, exclude_none: bool = True, verbose: bool = True, indent: int = 2, use_input_json: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the class input_json as a JSON string with settings.</p></div>
@@ -510,12 +543,13 @@ This function assumes any input is a Pydantic model, with no further validation 
     exclude_none: bool = True,
     verbose: bool = True,
     indent: int = 2,
+    use_input_json: bool = False,
 ):
     &#34;&#34;&#34;
     Return the class input_json as a JSON string with settings.
     &#34;&#34;&#34;
     return get_model_json(
-        self.input_json,
+        self.input_json if use_input_json else self._internal_data(),
         by_alias=by_alias,
         exclude_none=exclude_none,
         verbose=verbose,
@@ -527,7 +561,7 @@ This function assumes any input is a Pydantic model, with no further validation 
 </dd>
 <dt id="activitypubdantic.get_class.Collection"><code class="flex name class">
 <span>class <span class="ident">Collection</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: dict, default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Collection data and associated functions.</p></div>
@@ -535,28 +569,30 @@ This function assumes any input is a Pydantic model, with no further validation 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Collection(Base):
+<pre><code class="python">class Collection(Object):
     &#34;&#34;&#34;
     Collection data and associated functions.
     &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></li>
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></b></code>:
+<li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
 <ul class="hlist">
-<li><code><a title="activitypubdantic.get_class.Base.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
-<li><code><a title="activitypubdantic.get_class.Base.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="activitypubdantic.get_class.Link"><code class="flex name class">
 <span>class <span class="ident">Link</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: dict, default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Link data and associated functions.</p></div>
@@ -585,7 +621,7 @@ This function assumes any input is a Pydantic model, with no further validation 
 </dd>
 <dt id="activitypubdantic.get_class.Object"><code class="flex name class">
 <span>class <span class="ident">Object</span></span>
-<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: Union[dict, list], default_languages: list = ['en', 'en-US'])</span>
+<span>(</span><span>model: Union[<a title="activitypubdantic.models.core.ActivityModel" href="models/core.html#activitypubdantic.models.core.ActivityModel">ActivityModel</a>, <a title="activitypubdantic.models.actor.ActorModel" href="models/actor.html#activitypubdantic.models.actor.ActorModel">ActorModel</a>, <a title="activitypubdantic.models.core.CollectionModel" href="models/core.html#activitypubdantic.models.core.CollectionModel">CollectionModel</a>, <a title="activitypubdantic.models.core.LinkModel" href="models/core.html#activitypubdantic.models.core.LinkModel">LinkModel</a>, <a title="activitypubdantic.models.core.ObjectModel" href="models/core.html#activitypubdantic.models.core.ObjectModel">ObjectModel</a>], input_json: dict, default_languages: list = ['en', 'en-US'])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Object data and associated functions.</p></div>
@@ -596,12 +632,45 @@ This function assumes any input is a Pydantic model, with no further validation 
 <pre><code class="python">class Object(Base):
     &#34;&#34;&#34;
     Object data and associated functions.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    def make_public(self):
+        &#34;&#34;&#34;
+        Remove any fields (bto and bcc) that should not be public.
+        &#34;&#34;&#34;
+        self.bto = None
+        self.bcc = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="activitypubdantic.get_class.Activity" href="#activitypubdantic.get_class.Activity">Activity</a></li>
+<li><a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a></li>
+<li><a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Object.make_public"><code class="name flex">
+<span>def <span class="ident">make_public</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove any fields (bto and bcc) that should not be public.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_public(self):
+    &#34;&#34;&#34;
+    Remove any fields (bto and bcc) that should not be public.
+    &#34;&#34;&#34;
+    self.bto = None
+    self.bcc = None</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="activitypubdantic.get_class.Base" href="#activitypubdantic.get_class.Base">Base</a></b></code>:
@@ -655,6 +724,9 @@ This function assumes any input is a Pydantic model, with no further validation 
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></code></h4>
+<ul class="">
+<li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
