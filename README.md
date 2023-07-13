@@ -197,6 +197,6 @@ As demonstrated in the earlier example, class functions – like `make_public()`
 
 **ActivityPubdantic** is still a work in progress. If you find it valuable for your project but notice bugs, need changes, or require additional features or support for other ActivityPub platforms, [open an issue](https://github.com/joewlos/activitypubdantic/issues) or fork and [start a PR](https://github.com/joewlos/activitypubdantic/pulls).
 
-The `requirements.txt` file in the repository includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
+The `developer_requirements.txt` file in the repository includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
 
 Thank you for your interest!
