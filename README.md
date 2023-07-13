@@ -26,7 +26,7 @@ The following examples include simple use cases and code snippets for **Activity
 
 ### Parsing Activity, Collection, Link, and Object JSON
 
-`Activities`, `Collections`, `Links`, and `Objects` are the core concepts around which ActivityPub and ActivityStreams are both built. By reducing their complexity and standardizing their representation, **ActivityPubdantic** helps resolve potential pain points for developers.
+`Activities`, `Collections`, `Links`, and `Objects` are the core concepts around which ActivityPub and ActivityStreams are built. By reducing their complexity and standardizing their representation, **ActivityPubdantic** helps resolve potential pain points for developers.
 
 ActivityPub's protocol includes an [example](https://www.w3.org/TR/activitypub/#client-to-server-interactions) of a `Like` activity. The example's `to` field is a list, while its `cc` field is a string. Both formats are valid, but they require slightly different handling in subsequent lines of code. To resolve that difference, after validating this JSON, **ActivityPubdantic** rewrites it, so those fields are always presented as lists of dictionaries.
 
@@ -105,7 +105,7 @@ The `output_json` is longer and, at first glance, more complex. But because it c
 However, not every project requires this degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through `id` URLs in the JSON.
 
 ```python
-short_output_json = output_class.json(verbose=False)
+short_output_json = output_class.json(verbose=False)  # Use the verbosity flag
 print(short_output_json)  # See JSON below
 ```
 
@@ -136,7 +136,7 @@ A verbosity flag shortens the output, retaining consistency but eliminating unne
 
 [FastAPI](https://fastapi.tiangolo.com/) uses Pydantic models to validate [request bodies](https://fastapi.tiangolo.com/tutorial/body/). After importing **ActivityPubdantic** models directly, developers can automatically validate requests and then use the `get_class_from_model()` function to smoothly interact with the ActivityPub JSON.
 
-In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the body is validated by FastAPI, loaded into a **ActivityPubdantic** class to produce clean JSON, and used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
+In the following example, when the same `Like` activity is sent in the POST request to `/outbox`, the request body is validated by FastAPI, loaded into an **ActivityPubdantic** class to produce clean JSON, and used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
 
 ```python
 import activitypubdantic as ap

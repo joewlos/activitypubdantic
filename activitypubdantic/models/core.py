@@ -399,8 +399,8 @@ class LinkModel(CoreModel):
     A Link is an indirect, qualified reference to a resource identified by a URL.
     """
 
-    # Type does not need to be literal for propogation
-    type: str = "Link"
+    # Type
+    type: Literal["Link"] = "Link"
 
     # Required property, cannot be null (otherwise, what's the point of a Link?)
     href: HttpUrl
@@ -445,8 +445,8 @@ class ObjectModel(CoreModel):
     Accept a positional argument for id to handle different ActivityPub implementations.
     """
 
-    # Type does not need to be literal for propogation
-    type: str = "Object"
+    # Type
+    type: Literal["Object"] = "Object"
 
     # All objects distributed by the ActivityPub protocol MUST have unique global identifiers.
     # Unless they are intentionally transient, such as chat messages or game notifications.
@@ -537,8 +537,8 @@ class DocumentModel(ObjectModel):
     (Not actually core, but it is the base of Image, which is nested in Object.)
     """
 
-    # Type does not need to be literal for propogation
-    type: str = "Document"
+    # Type
+    type: Literal["Document"] = "Document"
 
 
 class ImageModel(DocumentModel):
@@ -579,8 +579,8 @@ class CollectionModel(ObjectModel):
     A Collection is a subtype of Object that represents ordered or unordered Links or Objects.
     """
 
-    # Type does not need to be literal for propogation
-    type: str = "Collection"
+    # Type
+    type: Literal["Collection"] = "Collection"
 
     # Collection properties
     total_items: Union[None, int] = Field(None, ge=0)
@@ -626,8 +626,8 @@ class CollectionPageModel(CollectionModel):
     Used to represent distinct subsets of items from a Collection.
     """
 
-    # Type does not need to be literal for propogation
-    type: str = "CollectionPage"
+    # Type
+    type: Literal["CollectionPage"] = "CollectionPage"
 
     # Properties
     part_of: Union[None, LinkModel, CollectionModel] = None

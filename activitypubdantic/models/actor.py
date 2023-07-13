@@ -90,8 +90,8 @@ class ActorModel(ObjectModel):
     ActivityPub adds properties: https://www.w3.org/TR/activitypub/#actors
     """
 
-    # Type does not need to be literal for propogation
-    type: str = "Actor"
+    # Type
+    type: Literal["Actor"] = "Actor"
 
     # Properties
     preferred_username: str = None
