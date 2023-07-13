@@ -20,6 +20,24 @@ However, that flexibility presents challenges for assessing data validity and si
 
 [Mastodon](https://docs.joinmastodon.org/spec/activitypub/) supports ActivityPub, and Meta's [Threads](https://apps.apple.com/us/app/threads-an-instagram-app/id6446901002) app plans to conform to the protocol sometime in the [near future](https://techcrunch.com/2023/07/05/adam-mosseri-says-metas-threads-app-wont-have-activitypub-support-at-launch/). **ActivityPubdantic** includes a test suite, which uses examples from ActivityPub, ActivityStreams, and Mastodon to test its parsing and validation. As Threads and other platforms implement ActivityPub, those tests (and more broadly, this package) will be updated to stay current.
 
+## Installation
+
+To install **ActivityPubdantic**, download this repository and add it to your project, or install the package with `pip`:
+
+```console
+pip install activitypubdantic
+```
+
+Most developer use cases will use one or both of the following import statements:
+
+```python
+# Use classes for validation and common operations
+import activitypubdantic as ap
+
+# Use models in FastAPI routes
+from activitypubdantic.models import *
+```
+
 ## Examples
 
 The following examples include simple use cases and code snippets for **ActivityPubdantic**. For a more thorough listing of **ActivityPubdantic's** classes, functions, and models, check out its [documentation](https://www.joewlos.com/activitypubdantic/).
@@ -32,6 +50,8 @@ ActivityPub's protocol includes an [example](https://www.w3.org/TR/activitypub/#
 
 ```python
 import activitypubdantic as ap
+
+# Example JSON from ActivityPub documentation
 example_json = {
   "@context": ["https://www.w3.org/ns/activitystreams",
                {"@language": "en"}],
@@ -44,7 +64,11 @@ example_json = {
          "https://rhiaro.co.uk/followers/"],
   "cc": "https://e14n.com/evan"
 }
-output_class = ap.get_class(example_json)  # Class is determined by "type" field
+
+# Get the appropriate class, which is determined by the type field
+output_class = ap.get_class(example_json)
+
+# Produce the parsed and validated JSON string
 output_json = output_class.json()
 print(output_json)  # See JSON below
 ```
@@ -105,11 +129,12 @@ The `output_json` is longer and, at first glance, more complex. But because it c
 However, not every project requires this degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through `id` URLs in the JSON.
 
 ```python
-short_output_json = output_class.json(verbose=False)  # Use the verbosity flag
+# Use the verbose keyword argument
+short_output_json = output_class.json(verbose=False)
 print(short_output_json)  # See JSON below
 ```
 
-A verbosity flag shortens the output, retaining consistency but eliminating unneeded data for simpler implementations.
+Setting `verbose=False` shortens the output, retaining consistency but eliminating unneeded data for simpler implementations.
 
 ```json
 {
@@ -145,16 +170,25 @@ from fastapi import FastAPI, Response
 
 app = FastAPI()
 
+# Route for an ActivityPub outbox
 @app.post("/outbox", status_code=201)
 async def outbox(activity: ActivityModel, response: Response):
+
+    # Initialize the class and perform relevant operations
     activity_class = ap.get_class_from_model(activity)
-    activity_class.make_public()  # Remove bto and bcc fields
-    print(activity_class.json())  # Save this JSON in the database
+    activity_class.make_public()
+
+    # Save this JSON in this user's outbox collection in the database
+    print(activity_class.json())
+
+    # Use the class's type to set the header
     response.headers["Location"] = "https://example.com/{0}/{1}".format(
-        activity_class.type.lower(),  # Use the type to help generate the returned location
+        activity_class.type.lower(),
         1,  # ID should come from the database
     )
+
+    # Return the data
     return {"message": "Submitted to Outbox"}
 ```
 
-The class functions – like `make_public()` – perform common operations on the data. Additionally, the class is used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
+As demonstrated in the earlier example, class functions – like `make_public()` – perform common operations on the data. Additionally, the class is used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
