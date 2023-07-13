@@ -20,3 +20,5 @@ jobs:
           pip install -r requirements.txt
       - name: Test
         run: pytest
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"

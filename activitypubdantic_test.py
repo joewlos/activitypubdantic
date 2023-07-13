@@ -86,6 +86,7 @@ class TestActivityPub:
         )
 
         # Assert that the data is the same
+        assert 1 == 2
         assert output_model.name == output_class.model.name == input_json["name"]
         assert output_model.type == input_json["type"] == "Person"
         assert output_verbose == match_verbose
