@@ -205,6 +205,6 @@ Methods – like `make_public()` – perform common operations on the data. In t
 
 The `developer_requirements.txt` file includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
 
-Keep in mind, all PRs require GitHub to successfully complete the test suite, so if your changes significantly alter **ActivityPubdantic**'s structure, be sure to add, alter, or remove relevant tests.
+Keep in mind, all PRs require GitHub to successfully complete the test suite, so if you significantly change **ActivityPubdantic**'s structure, be sure to add, alter, or remove relevant tests.
 
 Thank you for your interest!
