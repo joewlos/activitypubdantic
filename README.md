@@ -1,6 +1,7 @@
 # ActivityPubdantic
 
 ![CI](https://github.com/joewlos/activitypubdantic/actions/workflows/test.yaml/badge.svg?branch=main)
+[![PyPI version](https://badge.fury.io/py/activitypubdantic.svg)](https://badge.fury.io/py/activitypubdantic)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ### Validate and Interact with ActivityPub JSON
