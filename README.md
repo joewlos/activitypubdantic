@@ -1,5 +1,7 @@
 # ActivityPubdantic
 
+![example branch parameter](https://github.com/joewlos/activitypubdantic/actions/workflows/test.yaml/badge.svg?branch=main)
+
 ### Validate and Interact with ActivityPub JSON
 
 [GitHub Repository](https://github.com/joewlos/activitypubdantic)
