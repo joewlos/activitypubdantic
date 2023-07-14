@@ -1,6 +1,7 @@
 # ActivityPubdantic
 
-![example branch parameter](https://github.com/joewlos/activitypubdantic/actions/workflows/test.yaml/badge.svg?branch=main)
+![CI](https://github.com/joewlos/activitypubdantic/actions/workflows/test.yaml/badge.svg?branch=main)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ### Validate and Interact with ActivityPub JSON
 
