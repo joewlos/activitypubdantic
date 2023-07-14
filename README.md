@@ -2,11 +2,17 @@
 
 ### Validate and Interact with ActivityPub JSON
 
+[GitHub Repository](https://github.com/joewlos/activitypubdantic)
+
 [ActivityPubdantic Documentation](https://www.joewlos.com/activitypubdantic/)
 
 [ActivityPub Protocol](https://www.w3.org/TR/activitypub/)
 
 [ActivityStreams Specification](https://www.w3.org/TR/activitystreams-vocabulary/)
+
+## Development Note
+
+The current version of **ActivityPubdantic** available on PyPi is still undergoing testing and upgrades. If you plan to use **ActivityPubdantic** in your project, please keep in mind that its features and capabilities are likely to evolve and grow. Please see the [contributing](#contributing) section of this README for further information about **ActivityPubdantic**'s development.
 
 ## What Is ActivityPubdantic?
 
@@ -22,7 +28,7 @@ However, that flexibility presents challenges for assessing data validity and si
 
 ## Installation
 
-To install **ActivityPubdantic**, download this repository and add it to your project, or install the package with `pip`:
+Install the package with `pip`:
 
 ```console
 pip install activitypubdantic
@@ -73,7 +79,7 @@ output_json = output_class.json()
 print(output_json)  # See JSON below
 ```
 
-`get_class()` reads the `example_json` and uses its type to select the applicable Pydantic model. It then uses Pydantic validators for each field to assert they comply with the protocol and then restructure them.
+`get_class()` reads the `example_json` and uses its type to select the applicable Pydantic model. It then uses Pydantic validators for each field to assert they comply with the protocol and then restructures them.
 
 The `output_json` is longer and, at first glance, more complex. But because it contains types for each item in its fields and it standardizes the structures of similar fields – like `to` and `cc` – it is more descriptive and easier to consistently manipulate.
 
@@ -191,12 +197,14 @@ async def outbox(activity: ActivityModel, response: Response):
     return
 ```
 
-As demonstrated in the earlier example, class functions – like `make_public()` – perform common operations on the data. Additionally, the class is used to specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
+Methods – like `make_public()` – perform common operations on the data. In this case, `make_public()` removes the `bto` and `bcc` attributes from the class instance, if they exist. Additionally, the class instance helps specify a location in the response header, per the ActivityPub [documentation](https://www.w3.org/TR/activitypub/#client-to-server-interactions) for client-to-server interactions.
 
 ## Contributing
 
 **ActivityPubdantic** is still a work in progress. If you find it valuable for your project but notice bugs, need changes, or require additional features or support for other ActivityPub platforms, [open an issue](https://github.com/joewlos/activitypubdantic/issues) or fork to [start a PR](https://github.com/joewlos/activitypubdantic/pulls).
 
-The `developer_requirements.txt` file in the repository includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
+The `developer_requirements.txt` file includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
+
+Keep in mind, all PRs require GitHub to successfully complete the test suite, so if your changes significantly alter **ActivityPubdantic**'s structure, be sure to add, alter, or remove relevant tests.
 
 Thank you for your interest!
