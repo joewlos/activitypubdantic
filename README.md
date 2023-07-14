@@ -16,7 +16,7 @@
 
 ## Development Note
 
-The current version of **ActivityPubdantic** available on PyPi is still undergoing testing and upgrades. If you plan to use **ActivityPubdantic** in your project, please keep in mind that its features and capabilities are likely to evolve and grow. Please see the [contributing](#contributing) section of this README for further information about **ActivityPubdantic**'s development.
+The current version of **ActivityPubdantic** on PyPi is still undergoing testing and upgrades. If you plan to use **ActivityPubdantic** in your project, please keep in mind that its features and capabilities are likely to evolve and grow. Please see the [contributing](#contributing) section of this README for further information about **ActivityPubdantic**'s development.
 
 ## What Is ActivityPubdantic?
 
@@ -26,7 +26,7 @@ The current version of **ActivityPubdantic** available on PyPi is still undergoi
 
 [ActivityPub](https://www.w3.org/TR/activitypub/) is a protocol for decentralized social networking. It defines client-to-server and server-to-server interactions and relies on [ActivityStreams](https://www.w3.org/TR/activitystreams-vocabulary/#dfn-orderedcollection) for its vocabulary. Many of the protocol's definitions are purposefully unrestrictive, giving developers the freedom to implement only the features relevant to their products or to adjust to meet their particular requirements.
 
-However, that flexibility presents challenges for assessing data validity and simplifying developers' code. **ActivityPubdantic** helps solve those challenges by using ActivityPub's "type" field to identify proper checks for other fields and standardize their structures. [Examples](#examples) are available in the sections below.
+However, that flexibility presents challenges for assessing data validity and simplifying developers' code. **ActivityPubdantic** helps developers overcome those challenges by using ActivityPub's "type" field to identify proper checks for other fields and standardize their structures. [Examples](#examples) are available in the sections below.
 
 [Mastodon](https://docs.joinmastodon.org/spec/activitypub/) supports ActivityPub, and Meta's [Threads](https://apps.apple.com/us/app/threads-an-instagram-app/id6446901002) app plans to conform to the protocol sometime in the [near future](https://techcrunch.com/2023/07/05/adam-mosseri-says-metas-threads-app-wont-have-activitypub-support-at-launch/). **ActivityPubdantic** includes a test suite, which uses examples from ActivityPub, ActivityStreams, and Mastodon to test its parsing and validation. As Threads and other platforms implement ActivityPub, those tests (and more broadly, this package) will be updated to stay current.
 
@@ -136,7 +136,7 @@ The `output_json` is longer and, at first glance, more complex. But because it c
 }
 ```
 
-However, not every project requires this degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through `id` URLs in the JSON.
+However, not every project requires that degree of granularity. For example, some servers may already have logic that ignores additional fields and only iterates through `id` URLs in the JSON.
 
 ```python
 # Use the verbose keyword argument
@@ -207,7 +207,7 @@ Methods – like `make_public()` – perform common operations on the data. In t
 
 **ActivityPubdantic** is still a work in progress. If you find it valuable for your project but notice bugs, need changes, or require additional features or support for other ActivityPub platforms, [open an issue](https://github.com/joewlos/activitypubdantic/issues) or fork to [start a PR](https://github.com/joewlos/activitypubdantic/pulls).
 
-The `developer_requirements.txt` file includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation and `pytest` for unit tests.
+The `developer_requirements.txt` file includes all of the packages your virtual environment needs to start, including `pdoc3` for generating new documentation, `black` for formatting, and `pytest` for unit tests.
 
 Keep in mind, all PRs require GitHub to successfully run the test suite, so if you significantly change **ActivityPubdantic**'s structure, be sure to add, alter, or remove relevant tests.
 
