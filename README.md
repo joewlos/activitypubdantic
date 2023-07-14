@@ -181,14 +181,14 @@ app = FastAPI()
 @app.post("/outbox", status_code=201)
 async def outbox(activity: ActivityModel, response: Response):
 
-    # Initialize the class and perform relevant operations
+    # Initialize the class and perform relevant data manipulations
     activity_class = ap.get_class_from_model(activity)
     activity_class.make_public()
 
-    # Save the JSON in this user's outbox collection in the database
+    # Save the JSON in the outbox in the database
     print(activity_class.json())
 
-    # Use the class's type to set the header
+    # Use the type to set the header
     response.headers["Location"] = "https://example.com/{0}/{1}".format(
         activity_class.type.lower(),
         1,  # ID should come from the database
