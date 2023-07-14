@@ -3,6 +3,7 @@
 ![CI](https://github.com/joewlos/activitypubdantic/actions/workflows/test.yaml/badge.svg?branch=main)
 [![PyPI version](https://badge.fury.io/py/activitypubdantic.svg)](https://badge.fury.io/py/activitypubdantic)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/5697b1e4c4a9790ece607654e6c02a160620c7e1/docs/badge/v2.json)](https://pydantic.dev)
 
 ### Validate and Interact with ActivityPub JSON
 
