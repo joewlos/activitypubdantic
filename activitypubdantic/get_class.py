@@ -196,17 +196,17 @@ class Actor(Object):
     # Core type
     core_type = "Actor"
 
-    def act(self, action_type: str, object: Object):
+    def activity(self, action_type: str, object: Object = None):
         """
         Produce a new Activity of the given type with this Actor as the actor
         and the given Object as the object of the activity.
-        IntransitiveActivity will result in a validation failure.
+        Intransitive Activities have no object.
         """
         return get_class(
             {
                 "type": action_type,
                 "actor": self._internal_data(),
-                "object": object.data(),
+                "object": object.data() if object else None,
             }
         )
 
