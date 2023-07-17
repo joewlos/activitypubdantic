@@ -134,15 +134,56 @@ class Object(Base):
         self.bto = None
         self.bcc = None
 
+    def deliver_to(self, depth: int = 2):
+        """
+        Recursively iterate to determine the audience.
+        Use depth to set how deep the recursion should go.
+        Some IDs may indicate collections, which must be handled differently.
+        """
+        audience_fields = ["to", "bto", "cc", "bcc", "audience"]
+        audience_members = []
+        delivery_objects = [self._internal_data()]
+        current_depth = 0
+
+        # Iterate checking for the existence of delivery objects and our depth
+        while current_depth <= depth and len(delivery_objects) > 0:
+            new_delivery_objects = []
+            for o in delivery_objects:
+                for k, v in o.items():
+                    if k in audience_fields and v:
+                        audience_members += v
+
+                    # If the key is an object, add it to the delivery objects
+                    elif isinstance(v, dict) and v:
+                        new_delivery_objects.append(v)
+
+            # Set the new delivery objects
+            delivery_objects = new_delivery_objects
+
+            # Increase the delivery depth before looping again
+            current_depth += 1
+
+        # Get the id of each audience member and remove duplicates
+        audience_members = [
+            str(a["id"]) if isinstance(a, dict) and "id" in a else str(a)
+            for a in audience_members
+        ]
+        audience_members = list(set(audience_members))
+
+        # Return the audience members
+        return audience_members
+
     def create(self):
         """
         Produce a new Activity of type Create with this Object.
+        After insertion into database, add an ID.
         """
         if self._internal_data() == {}:
-            raise ValueError("Cannot Create an empty Object.")
+            raise ValueError("Cannot create an empty Object.")
         return get_class(
             {
                 "type": "Create",
+                "actor": self.actor,
                 "object": self._internal_data(),
                 "to": self.to,
                 "bto": self.bto,
@@ -155,7 +196,30 @@ class Object(Base):
 
     def delete(self):
         """
-        Produce a new Tombstone of this Object.
+        Produce a new Activity of type Delete with this Object.
+        Only provide an ID and published time for the Object.
+        After insertion into database, add an ID.
+        """
+        return get_class(
+            {
+                "type": "Delete",
+                "actor": self.actor,
+                "object": {
+                    "id": self.id,
+                    "published": self.published,
+                },
+                "to": self.to,
+                "bto": self.bto,
+                "cc": self.cc,
+                "bcc": self.bcc,
+                "audience": self.audience,
+                "published": datetime.now(),
+            }
+        )
+
+    def tombstone(self):
+        """
+        Produce a new Tombstone.
         """
         return get_class(
             {
@@ -179,6 +243,7 @@ class Activity(Object):
     def undo(self):
         """
         Produce a new Undo of this Activity.
+        After insertion into database, add an ID.
         """
         return get_class(
             {
@@ -201,6 +266,7 @@ class Actor(Object):
         Produce a new Activity of the given type with this Actor as the actor
         and the given Object as the object of the activity.
         Intransitive Activities have no object.
+        After insertion into database, add an ID.
         """
         return get_class(
             {
@@ -218,6 +284,47 @@ class Collection(Object):
 
     # Core type
     core_type = "Collection"
+
+    def add(self, object: Object = None):
+        """
+        Add an Object to the Collection.
+        """
+        if object._internal_data() == {}:
+            raise ValueError("Cannot add an empty Object.")
+
+        # Use the items or ordered_items fields
+        if "items" in self._internal_data():
+            self.items.insert(0, object.data())
+            items_count = len(self.items)
+        elif "ordered_items" in self._internal_data():
+            self.ordered_items.insert(0, object.data())
+            items_count = len(self.ordered_items)
+
+        # Update total items
+        self.total_items = items_count
+
+    def remove(self, object: Object = None):
+        """
+        Remove an Object from the Collection.
+        The Object must have an ID.
+        """
+        if object._internal_data() == {}:
+            raise ValueError("Cannot remove an empty Object.")
+        if object.id is None:
+            raise ValueError("Cannot remove an Object without an ID.")
+
+        # Use the items or ordered_items fields
+        if "items" in self._internal_data():
+            self.items = [i for i in self.items if "id" in i and i["id"] != object.id]
+            items_count = len(self.items)
+        elif "ordered_items" in self._internal_data():
+            self.ordered_items = [
+                i for i in self.ordered_items if "id" in i and i["id"] != object.id
+            ]
+            items_count = len(self.ordered_items)
+
+        # Update total items
+        self.total_items = items_count
 
 
 """

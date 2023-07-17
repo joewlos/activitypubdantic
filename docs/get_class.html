@@ -163,15 +163,56 @@ class Object(Base):
         self.bto = None
         self.bcc = None
 
+    def deliver_to(self, depth: int = 2):
+        &#34;&#34;&#34;
+        Recursively iterate to determine the audience.
+        Use depth to set how deep the recursion should go.
+        Some IDs may indicate collections, which must be handled differently.
+        &#34;&#34;&#34;
+        audience_fields = [&#34;to&#34;, &#34;bto&#34;, &#34;cc&#34;, &#34;bcc&#34;, &#34;audience&#34;]
+        audience_members = []
+        delivery_objects = [self._internal_data()]
+        current_depth = 0
+
+        # Iterate checking for the existence of delivery objects and our depth
+        while current_depth &lt;= depth and len(delivery_objects) &gt; 0:
+            new_delivery_objects = []
+            for o in delivery_objects:
+                for k, v in o.items():
+                    if k in audience_fields and v:
+                        audience_members += v
+
+                    # If the key is an object, add it to the delivery objects
+                    elif isinstance(v, dict) and v:
+                        new_delivery_objects.append(v)
+
+            # Set the new delivery objects
+            delivery_objects = new_delivery_objects
+
+            # Increase the delivery depth before looping again
+            current_depth += 1
+
+        # Get the id of each audience member and remove duplicates
+        audience_members = [
+            str(a[&#34;id&#34;]) if isinstance(a, dict) and &#34;id&#34; in a else str(a)
+            for a in audience_members
+        ]
+        audience_members = list(set(audience_members))
+
+        # Return the audience members
+        return audience_members
+
     def create(self):
         &#34;&#34;&#34;
         Produce a new Activity of type Create with this Object.
+        After insertion into database, add an ID.
         &#34;&#34;&#34;
         if self._internal_data() == {}:
-            raise ValueError(&#34;Cannot Create an empty Object.&#34;)
+            raise ValueError(&#34;Cannot create an empty Object.&#34;)
         return get_class(
             {
                 &#34;type&#34;: &#34;Create&#34;,
+                &#34;actor&#34;: self.actor,
                 &#34;object&#34;: self._internal_data(),
                 &#34;to&#34;: self.to,
                 &#34;bto&#34;: self.bto,
@@ -184,7 +225,30 @@ class Object(Base):
 
     def delete(self):
         &#34;&#34;&#34;
-        Produce a new Tombstone of this Object.
+        Produce a new Activity of type Delete with this Object.
+        Only provide an ID and published time for the Object.
+        After insertion into database, add an ID.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Delete&#34;,
+                &#34;actor&#34;: self.actor,
+                &#34;object&#34;: {
+                    &#34;id&#34;: self.id,
+                    &#34;published&#34;: self.published,
+                },
+                &#34;to&#34;: self.to,
+                &#34;bto&#34;: self.bto,
+                &#34;cc&#34;: self.cc,
+                &#34;bcc&#34;: self.bcc,
+                &#34;audience&#34;: self.audience,
+                &#34;published&#34;: datetime.now(),
+            }
+        )
+
+    def tombstone(self):
+        &#34;&#34;&#34;
+        Produce a new Tombstone.
         &#34;&#34;&#34;
         return get_class(
             {
@@ -208,6 +272,7 @@ class Activity(Object):
     def undo(self):
         &#34;&#34;&#34;
         Produce a new Undo of this Activity.
+        After insertion into database, add an ID.
         &#34;&#34;&#34;
         return get_class(
             {
@@ -225,17 +290,18 @@ class Actor(Object):
     # Core type
     core_type = &#34;Actor&#34;
 
-    def act(self, action_type: str, object: Object):
+    def activity(self, action_type: str, object: Object = None):
         &#34;&#34;&#34;
         Produce a new Activity of the given type with this Actor as the actor
         and the given Object as the object of the activity.
-        IntransitiveActivity will result in a validation failure.
+        Intransitive Activities have no object.
+        After insertion into database, add an ID.
         &#34;&#34;&#34;
         return get_class(
             {
                 &#34;type&#34;: action_type,
                 &#34;actor&#34;: self._internal_data(),
-                &#34;object&#34;: object.data(),
+                &#34;object&#34;: object.data() if object else None,
             }
         )
 
@@ -247,6 +313,47 @@ class Collection(Object):
 
     # Core type
     core_type = &#34;Collection&#34;
+
+    def add(self, object: Object = None):
+        &#34;&#34;&#34;
+        Add an Object to the Collection.
+        &#34;&#34;&#34;
+        if object._internal_data() == {}:
+            raise ValueError(&#34;Cannot add an empty Object.&#34;)
+
+        # Use the items or ordered_items fields
+        if &#34;items&#34; in self._internal_data():
+            self.items.insert(0, object.data())
+            items_count = len(self.items)
+        elif &#34;ordered_items&#34; in self._internal_data():
+            self.ordered_items.insert(0, object.data())
+            items_count = len(self.ordered_items)
+
+        # Update total items
+        self.total_items = items_count
+
+    def remove(self, object: Object = None):
+        &#34;&#34;&#34;
+        Remove an Object from the Collection.
+        The Object must have an ID.
+        &#34;&#34;&#34;
+        if object._internal_data() == {}:
+            raise ValueError(&#34;Cannot remove an empty Object.&#34;)
+        if object.id is None:
+            raise ValueError(&#34;Cannot remove an Object without an ID.&#34;)
+
+        # Use the items or ordered_items fields
+        if &#34;items&#34; in self._internal_data():
+            self.items = [i for i in self.items if &#34;id&#34; in i and i[&#34;id&#34;] != object.id]
+            items_count = len(self.items)
+        elif &#34;ordered_items&#34; in self._internal_data():
+            self.ordered_items = [
+                i for i in self.ordered_items if &#34;id&#34; in i and i[&#34;id&#34;] != object.id
+            ]
+            items_count = len(self.ordered_items)
+
+        # Update total items
+        self.total_items = items_count
 
 
 &#34;&#34;&#34;
@@ -439,6 +546,7 @@ This function assumes any input is a Pydantic model, with no further validation 
     def undo(self):
         &#34;&#34;&#34;
         Produce a new Undo of this Activity.
+        After insertion into database, add an ID.
         &#34;&#34;&#34;
         return get_class(
             {
@@ -465,7 +573,8 @@ This function assumes any input is a Pydantic model, with no further validation 
 <span>def <span class="ident">undo</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Produce a new Undo of this Activity.</p></div>
+<div class="desc"><p>Produce a new Undo of this Activity.
+After insertion into database, add an ID.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -473,6 +582,7 @@ This function assumes any input is a Pydantic model, with no further validation 
 <pre><code class="python">def undo(self):
     &#34;&#34;&#34;
     Produce a new Undo of this Activity.
+    After insertion into database, add an ID.
     &#34;&#34;&#34;
     return get_class(
         {
@@ -490,8 +600,10 @@ This function assumes any input is a Pydantic model, with no further validation 
 <li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.deliver_to" href="#activitypubdantic.get_class.Object.deliver_to">deliver_to</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.tombstone" href="#activitypubdantic.get_class.Object.tombstone">tombstone</a></code></li>
 </ul>
 </li>
 </ul>
@@ -514,17 +626,18 @@ This function assumes any input is a Pydantic model, with no further validation 
     # Core type
     core_type = &#34;Actor&#34;
 
-    def act(self, action_type: str, object: Object):
+    def activity(self, action_type: str, object: Object = None):
         &#34;&#34;&#34;
         Produce a new Activity of the given type with this Actor as the actor
         and the given Object as the object of the activity.
-        IntransitiveActivity will result in a validation failure.
+        Intransitive Activities have no object.
+        After insertion into database, add an ID.
         &#34;&#34;&#34;
         return get_class(
             {
                 &#34;type&#34;: action_type,
                 &#34;actor&#34;: self._internal_data(),
-                &#34;object&#34;: object.data(),
+                &#34;object&#34;: object.data() if object else None,
             }
         )</code></pre>
 </details>
@@ -542,28 +655,30 @@ This function assumes any input is a Pydantic model, with no further validation 
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="activitypubdantic.get_class.Actor.act"><code class="name flex">
-<span>def <span class="ident">act</span></span>(<span>self, action_type: str, object: <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a>)</span>
+<dt id="activitypubdantic.get_class.Actor.activity"><code class="name flex">
+<span>def <span class="ident">activity</span></span>(<span>self, action_type: str, object: <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a> = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Produce a new Activity of the given type with this Actor as the actor
 and the given Object as the object of the activity.
-IntransitiveActivity will result in a validation failure.</p></div>
+Intransitive Activities have no object.
+After insertion into database, add an ID.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def act(self, action_type: str, object: Object):
+<pre><code class="python">def activity(self, action_type: str, object: Object = None):
     &#34;&#34;&#34;
     Produce a new Activity of the given type with this Actor as the actor
     and the given Object as the object of the activity.
-    IntransitiveActivity will result in a validation failure.
+    Intransitive Activities have no object.
+    After insertion into database, add an ID.
     &#34;&#34;&#34;
     return get_class(
         {
             &#34;type&#34;: action_type,
             &#34;actor&#34;: self._internal_data(),
-            &#34;object&#34;: object.data(),
+            &#34;object&#34;: object.data() if object else None,
         }
     )</code></pre>
 </details>
@@ -576,8 +691,10 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.deliver_to" href="#activitypubdantic.get_class.Object.deliver_to">deliver_to</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.tombstone" href="#activitypubdantic.get_class.Object.tombstone">tombstone</a></code></li>
 </ul>
 </li>
 </ul>
@@ -751,7 +868,48 @@ IntransitiveActivity will result in a validation failure.</p></div>
     &#34;&#34;&#34;
 
     # Core type
-    core_type = &#34;Collection&#34;</code></pre>
+    core_type = &#34;Collection&#34;
+
+    def add(self, object: Object = None):
+        &#34;&#34;&#34;
+        Add an Object to the Collection.
+        &#34;&#34;&#34;
+        if object._internal_data() == {}:
+            raise ValueError(&#34;Cannot add an empty Object.&#34;)
+
+        # Use the items or ordered_items fields
+        if &#34;items&#34; in self._internal_data():
+            self.items.insert(0, object.data())
+            items_count = len(self.items)
+        elif &#34;ordered_items&#34; in self._internal_data():
+            self.ordered_items.insert(0, object.data())
+            items_count = len(self.ordered_items)
+
+        # Update total items
+        self.total_items = items_count
+
+    def remove(self, object: Object = None):
+        &#34;&#34;&#34;
+        Remove an Object from the Collection.
+        The Object must have an ID.
+        &#34;&#34;&#34;
+        if object._internal_data() == {}:
+            raise ValueError(&#34;Cannot remove an empty Object.&#34;)
+        if object.id is None:
+            raise ValueError(&#34;Cannot remove an Object without an ID.&#34;)
+
+        # Use the items or ordered_items fields
+        if &#34;items&#34; in self._internal_data():
+            self.items = [i for i in self.items if &#34;id&#34; in i and i[&#34;id&#34;] != object.id]
+            items_count = len(self.items)
+        elif &#34;ordered_items&#34; in self._internal_data():
+            self.ordered_items = [
+                i for i in self.ordered_items if &#34;id&#34; in i and i[&#34;id&#34;] != object.id
+            ]
+            items_count = len(self.ordered_items)
+
+        # Update total items
+        self.total_items = items_count</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -765,6 +923,71 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="activitypubdantic.get_class.Collection.add"><code class="name flex">
+<span>def <span class="ident">add</span></span>(<span>self, object: <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a> = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add an Object to the Collection.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add(self, object: Object = None):
+    &#34;&#34;&#34;
+    Add an Object to the Collection.
+    &#34;&#34;&#34;
+    if object._internal_data() == {}:
+        raise ValueError(&#34;Cannot add an empty Object.&#34;)
+
+    # Use the items or ordered_items fields
+    if &#34;items&#34; in self._internal_data():
+        self.items.insert(0, object.data())
+        items_count = len(self.items)
+    elif &#34;ordered_items&#34; in self._internal_data():
+        self.ordered_items.insert(0, object.data())
+        items_count = len(self.ordered_items)
+
+    # Update total items
+    self.total_items = items_count</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.get_class.Collection.remove"><code class="name flex">
+<span>def <span class="ident">remove</span></span>(<span>self, object: <a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a> = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove an Object from the Collection.
+The Object must have an ID.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove(self, object: Object = None):
+    &#34;&#34;&#34;
+    Remove an Object from the Collection.
+    The Object must have an ID.
+    &#34;&#34;&#34;
+    if object._internal_data() == {}:
+        raise ValueError(&#34;Cannot remove an empty Object.&#34;)
+    if object.id is None:
+        raise ValueError(&#34;Cannot remove an Object without an ID.&#34;)
+
+    # Use the items or ordered_items fields
+    if &#34;items&#34; in self._internal_data():
+        self.items = [i for i in self.items if &#34;id&#34; in i and i[&#34;id&#34;] != object.id]
+        items_count = len(self.items)
+    elif &#34;ordered_items&#34; in self._internal_data():
+        self.ordered_items = [
+            i for i in self.ordered_items if &#34;id&#34; in i and i[&#34;id&#34;] != object.id
+        ]
+        items_count = len(self.ordered_items)
+
+    # Update total items
+    self.total_items = items_count</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></b></code>:
@@ -772,8 +995,10 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.data" href="#activitypubdantic.get_class.Base.data">data</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.deliver_to" href="#activitypubdantic.get_class.Object.deliver_to">deliver_to</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.json" href="#activitypubdantic.get_class.Base.json">json</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.tombstone" href="#activitypubdantic.get_class.Object.tombstone">tombstone</a></code></li>
 </ul>
 </li>
 </ul>
@@ -842,15 +1067,56 @@ IntransitiveActivity will result in a validation failure.</p></div>
         self.bto = None
         self.bcc = None
 
+    def deliver_to(self, depth: int = 2):
+        &#34;&#34;&#34;
+        Recursively iterate to determine the audience.
+        Use depth to set how deep the recursion should go.
+        Some IDs may indicate collections, which must be handled differently.
+        &#34;&#34;&#34;
+        audience_fields = [&#34;to&#34;, &#34;bto&#34;, &#34;cc&#34;, &#34;bcc&#34;, &#34;audience&#34;]
+        audience_members = []
+        delivery_objects = [self._internal_data()]
+        current_depth = 0
+
+        # Iterate checking for the existence of delivery objects and our depth
+        while current_depth &lt;= depth and len(delivery_objects) &gt; 0:
+            new_delivery_objects = []
+            for o in delivery_objects:
+                for k, v in o.items():
+                    if k in audience_fields and v:
+                        audience_members += v
+
+                    # If the key is an object, add it to the delivery objects
+                    elif isinstance(v, dict) and v:
+                        new_delivery_objects.append(v)
+
+            # Set the new delivery objects
+            delivery_objects = new_delivery_objects
+
+            # Increase the delivery depth before looping again
+            current_depth += 1
+
+        # Get the id of each audience member and remove duplicates
+        audience_members = [
+            str(a[&#34;id&#34;]) if isinstance(a, dict) and &#34;id&#34; in a else str(a)
+            for a in audience_members
+        ]
+        audience_members = list(set(audience_members))
+
+        # Return the audience members
+        return audience_members
+
     def create(self):
         &#34;&#34;&#34;
         Produce a new Activity of type Create with this Object.
+        After insertion into database, add an ID.
         &#34;&#34;&#34;
         if self._internal_data() == {}:
-            raise ValueError(&#34;Cannot Create an empty Object.&#34;)
+            raise ValueError(&#34;Cannot create an empty Object.&#34;)
         return get_class(
             {
                 &#34;type&#34;: &#34;Create&#34;,
+                &#34;actor&#34;: self.actor,
                 &#34;object&#34;: self._internal_data(),
                 &#34;to&#34;: self.to,
                 &#34;bto&#34;: self.bto,
@@ -863,7 +1129,30 @@ IntransitiveActivity will result in a validation failure.</p></div>
 
     def delete(self):
         &#34;&#34;&#34;
-        Produce a new Tombstone of this Object.
+        Produce a new Activity of type Delete with this Object.
+        Only provide an ID and published time for the Object.
+        After insertion into database, add an ID.
+        &#34;&#34;&#34;
+        return get_class(
+            {
+                &#34;type&#34;: &#34;Delete&#34;,
+                &#34;actor&#34;: self.actor,
+                &#34;object&#34;: {
+                    &#34;id&#34;: self.id,
+                    &#34;published&#34;: self.published,
+                },
+                &#34;to&#34;: self.to,
+                &#34;bto&#34;: self.bto,
+                &#34;cc&#34;: self.cc,
+                &#34;bcc&#34;: self.bcc,
+                &#34;audience&#34;: self.audience,
+                &#34;published&#34;: datetime.now(),
+            }
+        )
+
+    def tombstone(self):
+        &#34;&#34;&#34;
+        Produce a new Tombstone.
         &#34;&#34;&#34;
         return get_class(
             {
@@ -898,7 +1187,8 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <span>def <span class="ident">create</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Produce a new Activity of type Create with this Object.</p></div>
+<div class="desc"><p>Produce a new Activity of type Create with this Object.
+After insertion into database, add an ID.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -906,12 +1196,14 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <pre><code class="python">def create(self):
     &#34;&#34;&#34;
     Produce a new Activity of type Create with this Object.
+    After insertion into database, add an ID.
     &#34;&#34;&#34;
     if self._internal_data() == {}:
-        raise ValueError(&#34;Cannot Create an empty Object.&#34;)
+        raise ValueError(&#34;Cannot create an empty Object.&#34;)
     return get_class(
         {
             &#34;type&#34;: &#34;Create&#34;,
+            &#34;actor&#34;: self.actor,
             &#34;object&#34;: self._internal_data(),
             &#34;to&#34;: self.to,
             &#34;bto&#34;: self.bto,
@@ -927,24 +1219,86 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <span>def <span class="ident">delete</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Produce a new Tombstone of this Object.</p></div>
+<div class="desc"><p>Produce a new Activity of type Delete with this Object.
+Only provide an ID and published time for the Object.
+After insertion into database, add an ID.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def delete(self):
     &#34;&#34;&#34;
-    Produce a new Tombstone of this Object.
+    Produce a new Activity of type Delete with this Object.
+    Only provide an ID and published time for the Object.
+    After insertion into database, add an ID.
     &#34;&#34;&#34;
     return get_class(
         {
-            &#34;type&#34;: &#34;Tombstone&#34;,
-            &#34;id&#34;: self.id,
-            &#34;published&#34;: self.published,
-            &#34;updated&#34;: datetime.now(),
-            &#34;deleted&#34;: datetime.now(),
+            &#34;type&#34;: &#34;Delete&#34;,
+            &#34;actor&#34;: self.actor,
+            &#34;object&#34;: {
+                &#34;id&#34;: self.id,
+                &#34;published&#34;: self.published,
+            },
+            &#34;to&#34;: self.to,
+            &#34;bto&#34;: self.bto,
+            &#34;cc&#34;: self.cc,
+            &#34;bcc&#34;: self.bcc,
+            &#34;audience&#34;: self.audience,
+            &#34;published&#34;: datetime.now(),
         }
     )</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.get_class.Object.deliver_to"><code class="name flex">
+<span>def <span class="ident">deliver_to</span></span>(<span>self, depth: int = 2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recursively iterate to determine the audience.
+Use depth to set how deep the recursion should go.
+Some IDs may indicate collections, which must be handled differently.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def deliver_to(self, depth: int = 2):
+    &#34;&#34;&#34;
+    Recursively iterate to determine the audience.
+    Use depth to set how deep the recursion should go.
+    Some IDs may indicate collections, which must be handled differently.
+    &#34;&#34;&#34;
+    audience_fields = [&#34;to&#34;, &#34;bto&#34;, &#34;cc&#34;, &#34;bcc&#34;, &#34;audience&#34;]
+    audience_members = []
+    delivery_objects = [self._internal_data()]
+    current_depth = 0
+
+    # Iterate checking for the existence of delivery objects and our depth
+    while current_depth &lt;= depth and len(delivery_objects) &gt; 0:
+        new_delivery_objects = []
+        for o in delivery_objects:
+            for k, v in o.items():
+                if k in audience_fields and v:
+                    audience_members += v
+
+                # If the key is an object, add it to the delivery objects
+                elif isinstance(v, dict) and v:
+                    new_delivery_objects.append(v)
+
+        # Set the new delivery objects
+        delivery_objects = new_delivery_objects
+
+        # Increase the delivery depth before looping again
+        current_depth += 1
+
+    # Get the id of each audience member and remove duplicates
+    audience_members = [
+        str(a[&#34;id&#34;]) if isinstance(a, dict) and &#34;id&#34; in a else str(a)
+        for a in audience_members
+    ]
+    audience_members = list(set(audience_members))
+
+    # Return the audience members
+    return audience_members</code></pre>
 </details>
 </dd>
 <dt id="activitypubdantic.get_class.Object.make_public"><code class="name flex">
@@ -962,6 +1316,30 @@ IntransitiveActivity will result in a validation failure.</p></div>
     &#34;&#34;&#34;
     self.bto = None
     self.bcc = None</code></pre>
+</details>
+</dd>
+<dt id="activitypubdantic.get_class.Object.tombstone"><code class="name flex">
+<span>def <span class="ident">tombstone</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produce a new Tombstone.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tombstone(self):
+    &#34;&#34;&#34;
+    Produce a new Tombstone.
+    &#34;&#34;&#34;
+    return get_class(
+        {
+            &#34;type&#34;: &#34;Tombstone&#34;,
+            &#34;id&#34;: self.id,
+            &#34;published&#34;: self.published,
+            &#34;updated&#34;: datetime.now(),
+            &#34;deleted&#34;: datetime.now(),
+        }
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -1007,7 +1385,7 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Actor" href="#activitypubdantic.get_class.Actor">Actor</a></code></h4>
 <ul class="">
-<li><code><a title="activitypubdantic.get_class.Actor.act" href="#activitypubdantic.get_class.Actor.act">act</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Actor.activity" href="#activitypubdantic.get_class.Actor.activity">activity</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Actor.core_type" href="#activitypubdantic.get_class.Actor.core_type">core_type</a></code></li>
 </ul>
 </li>
@@ -1021,7 +1399,9 @@ IntransitiveActivity will result in a validation failure.</p></div>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Collection" href="#activitypubdantic.get_class.Collection">Collection</a></code></h4>
 <ul class="">
+<li><code><a title="activitypubdantic.get_class.Collection.add" href="#activitypubdantic.get_class.Collection.add">add</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Collection.core_type" href="#activitypubdantic.get_class.Collection.core_type">core_type</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Collection.remove" href="#activitypubdantic.get_class.Collection.remove">remove</a></code></li>
 </ul>
 </li>
 <li>
@@ -1032,11 +1412,13 @@ IntransitiveActivity will result in a validation failure.</p></div>
 </li>
 <li>
 <h4><code><a title="activitypubdantic.get_class.Object" href="#activitypubdantic.get_class.Object">Object</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="activitypubdantic.get_class.Object.core_type" href="#activitypubdantic.get_class.Object.core_type">core_type</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.create" href="#activitypubdantic.get_class.Object.create">create</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.delete" href="#activitypubdantic.get_class.Object.delete">delete</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.deliver_to" href="#activitypubdantic.get_class.Object.deliver_to">deliver_to</a></code></li>
 <li><code><a title="activitypubdantic.get_class.Object.make_public" href="#activitypubdantic.get_class.Object.make_public">make_public</a></code></li>
+<li><code><a title="activitypubdantic.get_class.Object.tombstone" href="#activitypubdantic.get_class.Object.tombstone">tombstone</a></code></li>
 </ul>
 </li>
 </ul>

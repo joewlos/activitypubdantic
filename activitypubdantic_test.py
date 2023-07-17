@@ -140,6 +140,14 @@ class TestActivityPub:
 
         # Assert that the data is the same
         assert len(output_data["to"]) == len(input_json["to"])
+        assert set(output_class.deliver_to()) == set(
+            [
+                "https://rhiaro.co.uk/#amy",
+                "https://dustycloud.org/followers",
+                "https://e14n.com/evan",
+                "https://rhiaro.co.uk/followers/",
+            ]
+        )
         assert output_model.type == input_json["type"] == output_data["type"] == "Like"
 
     def test_article(self):
@@ -156,6 +164,12 @@ class TestActivityPub:
 
         # Assert that the data is the same
         assert output_data["name"] == input_json["name"]
+        assert set(output_class.deliver_to()) == set(
+            [
+                "https://e14n.com/evan",
+                "https://rhiaro.co.uk/followers/",
+            ]
+        )
         assert output_data["content"] == input_json["content"]
         assert (
             output_model.type == input_json["type"] == output_data["type"] == "Article"
@@ -591,6 +605,9 @@ class TestMastodon:
 
         # Assert that the data is the same
         assert output_data["actor"][0]["type"] == "Object"
+        assert set(output_class.deliver_to()) == set(
+            ["https://activitypub.academy/users/dibutus_godorviol"]
+        )
         assert len(output_data["to"]) == len(input_json["to"]) == 1
         assert (
             output_model.type == input_json["type"] == output_data["type"] == "Accept"
