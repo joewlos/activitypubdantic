@@ -456,7 +456,7 @@ class LinkModel(CoreModel):
         validate_list_links_or_objects
     )
 
-    # Initialize with an optional positional argument for id
+    # Initialize with an optional positional argument for href
     def __init__(self, href: HttpUrl = None, **kwargs) -> None:
         if href:
             super(LinkModel, self).__init__(href=href, **kwargs)
